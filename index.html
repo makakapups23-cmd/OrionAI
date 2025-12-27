@@ -141,7 +141,6 @@
         const GEMINI_API_KEY = "AIzaSyBQSNv8s_EncCR7VW0rNCnW2IW-llBum-U";
         lucide.createIcons();
 
-        // --- ПЕРЕКЛАД ---
         const translations = {
             uk: {
                 newChat: "Новий чат", history: "Історія чатів", settings: "Налаштування",
@@ -176,7 +175,6 @@
             document.getElementById('login-btn').innerText = t.login;
         }
 
-        // --- ЕНТЕР ТА ВІДПРАВКА ---
         document.getElementById('msg-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -225,14 +223,13 @@
             chat.scrollTop = chat.scrollHeight;
         }
 
-        // --- ПРО ТА ТАЙМЕР ---
         function activatePro() {
             if (cooldownActive) return;
             isPro = true;
             proRequests = 20;
             document.getElementById('pro-btn').innerText = translations[currentLang].proActive;
             document.getElementById('pro-counter').classList.remove('hidden');
-            document.getElementById('badge-pro').classList.remove('hidden');
+            document.getElementById('badge-pro').classList.remove('hidden'); // Показуємо плашку
             document.getElementById('requests-left').innerText = proRequests;
         }
 
@@ -240,21 +237,23 @@
             isPro = false;
             cooldownActive = true;
             document.getElementById('pro-btn').classList.add('hidden');
+            document.getElementById('badge-pro').classList.add('hidden'); // ХОВАЄМО плашку, коли PRO скінчилось
             document.getElementById('timer-display').classList.remove('hidden');
             let sec = 24 * 60 * 60;
             const t = setInterval(() => {
                 sec--;
                 let h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-                document.getElementById('countdown').innerText = `${h}:${m}:${s}`;
+                document.getElementById('countdown').innerText = 
+                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
                 if (sec <= 0) { 
                     clearInterval(t); 
                     cooldownActive = false; 
                     document.getElementById('pro-btn').classList.remove('hidden');
+                    document.getElementById('timer-display').classList.add('hidden');
                 }
             }, 1000);
         }
 
-        // --- ІНШЕ ---
         function toggleSettings() {
             const m = document.getElementById('settings-modal');
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
