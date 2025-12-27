@@ -3,115 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrionAI — Твій інтелектуальний супутник</title>
+    <title>OrionAI — Потужний інтелект</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; overflow: hidden; }
-        body.dark-theme { background-color: #0b0e14; color: #e2e8f0; }
-        body.light-theme { background-color: #f8fafc; color: #1e293b; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #e2e8f0; overflow: hidden; transition: all 0.3s; }
         .glass { background: rgba(23, 27, 34, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
-        .light-theme .glass { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0,0,0,0.05); }
-        #sidebar { transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; }
-        .sidebar-hidden #sidebar { transform: translateX(-100%); width: 0; padding: 0; margin: 0; overflow: hidden; border: none; }
-        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
-        .sidebar-item:hover { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-        .thinking { animation: pulse 1.5s infinite; font-size: 12px; color: #94a3b8; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .chat-scroll::-webkit-scrollbar { width: 5px; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 10px; }
+        #sidebar { transition: all 0.3s ease; }
+        .sidebar-hidden #sidebar { transform: translateX(-100%); width: 0; padding: 0; opacity: 0; }
+        .thinking { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         #settings-modal { display: none; }
     </style>
 </head>
-<body class="h-screen flex dark-theme">
+<body class="h-screen flex">
 
     <aside id="sidebar" class="w-64 glass border-r border-white/5 flex flex-col p-4 z-20 shrink-0">
         <div class="flex items-center gap-3 mb-8 px-2">
-            <div class="w-8 h-8 rounded-lg pro-gradient flex items-center justify-center shadow-lg"><i data-lucide="sparkles" class="w-5 h-5 text-white"></i></div>
-            <h1 class="font-bold text-xl tracking-tight">OrionAI</h1>
+            <div class="w-8 h-8 rounded-lg pro-gradient flex items-center justify-center text-white shadow-lg"><i data-lucide="zap" class="w-5 h-5"></i></div>
+            <h1 class="font-bold text-xl tracking-tighter">OrionAI</h1>
         </div>
 
-        <button onclick="newChat()" class="flex items-center gap-2 w-full bg-white/5 border border-white/10 p-3 rounded-xl hover:bg-white/10 transition mb-6 text-sm font-medium">
+        <button onclick="window.location.reload()" class="flex items-center gap-2 w-full bg-white/5 border border-white/10 p-3 rounded-xl hover:bg-white/10 transition mb-6 text-sm">
             <i data-lucide="plus" class="w-4 h-4"></i> <span id="txt-new-chat">Новий чат</span>
         </button>
 
         <nav class="flex-1 space-y-2 overflow-y-auto chat-scroll">
-            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-3 mb-3" id="txt-history">Історія чатів</p>
-            <div id="chat-history" class="space-y-1"></div>
-            
-            <div class="sidebar-item" onclick="toggleSettings()">
+            <p class="text-[10px] font-bold text-gray-500 uppercase px-3 mb-2 tracking-widest" id="txt-menu-label">Меню</p>
+            <div class="flex items-center gap-3 p-3 text-gray-400 hover:bg-white/5 rounded-xl transition cursor-pointer">
+                <i data-lucide="folder-heart" class="w-4 h-4"></i> <span id="txt-my-content">Мій контент</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 text-gray-400 hover:bg-white/5 rounded-xl transition cursor-pointer" onclick="toggleSettings()">
                 <i data-lucide="settings" class="w-4 h-4"></i> <span id="txt-settings">Налаштування</span>
             </div>
         </nav>
 
-        <div class="mt-auto pt-4 border-t border-white/5 space-y-3">
-            <div id="pro-counter" class="text-[10px] text-center text-gray-400 hidden">
-                <span id="txt-pro-left">Запитів залишилось</span>: <span id="requests-left">20</span>
-            </div>
-            <div id="pro-btn" onclick="activatePro()" class="p-3 rounded-xl pro-gradient text-white text-xs font-bold cursor-pointer hover:opacity-90 transition text-center shadow-lg">
+        <div class="mt-auto pt-4 border-t border-white/5">
+            <button id="pro-btn" onclick="handleProClick()" class="w-full p-4 rounded-2xl pro-gradient text-white text-xs font-bold shadow-2xl hover:scale-[1.02] transition">
                 АКТИВУВАТИ PRO
-            </div>
+            </button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0 transition-all duration-300">
-        <header class="h-16 glass border-b border-white/5 flex justify-between items-center px-6 z-10">
-            <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
-                </button>
-                <div id="status-badge" class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 border border-gray-700 text-[10px] text-gray-400">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Orion v2.5 Online 
-                    <span id="badge-pro" class="ml-2 hidden text-purple-400 font-bold tracking-widest">PRO</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-200 transition">УВІЙТИ</button>
-                <div id="user-ui" class="hidden items-center gap-3">
-                    <span id="user-name" class="text-xs font-medium text-gray-300"></span>
-                    <img id="user-pic" src="" class="w-8 h-8 rounded-full border border-purple-500/50">
+    <main class="flex-1 flex flex-col min-w-0">
+        <header class="h-16 glass border-b border-white/5 flex justify-between items-center px-6">
+            <button onclick="document.body.classList.toggle('sidebar-hidden')" class="p-2 hover:bg-white/10 rounded-lg text-gray-400"><i data-lucide="menu"></i></button>
+            <div id="auth-section" class="flex items-center gap-4">
+                <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-5 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition shadow-lg">УВІЙТИ</button>
+                <div id="user-info" class="hidden items-center gap-3">
+                    <img id="user-pic" class="w-9 h-9 rounded-full border-2 border-purple-500 shadow-lg">
                 </div>
             </div>
         </header>
 
-        <div id="chat-display" class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 chat-scroll">
-            <div class="max-w-3xl mx-auto flex gap-4 items-start">
-                <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div>
-                <div class="glass p-5 rounded-2xl rounded-tl-none text-sm shadow-xl" id="welcome-msg">
-                    Привіт! Я OrionAI. Чим можу допомогти сьогодні?
+        <div id="chat-display" class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 chat-scroll">
+            <div class="max-w-3xl mx-auto flex gap-4">
+                <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center text-white shrink-0 shadow-lg"><i data-lucide="bot"></i></div>
+                <div class="glass p-5 rounded-2xl rounded-tl-none text-sm leading-relaxed" id="welcome-msg">
+                    Привіт! Я OrionAI. Очікую на ваші запитання або фото (у PRO режимі).
                 </div>
             </div>
         </div>
 
-        <footer class="p-6">
-            <div class="max-w-3xl mx-auto">
-                <div class="glass rounded-2xl p-2 flex items-end gap-2 shadow-2xl border-white/10 focus-within:border-purple-500/50 transition-all">
-                    <textarea id="msg-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-3 text-sm placeholder-gray-600 resize-none max-h-40 outline-none" placeholder="Напиши повідомлення..."></textarea>
-                    <button onclick="handleSend()" class="bg-purple-600 p-3 rounded-xl hover:bg-purple-500 transition text-white shadow-lg">
-                        <i data-lucide="send" class="w-5 h-5"></i>
-                    </button>
+        <footer class="p-6 bg-gradient-to-t from-[#0b0e14] to-transparent">
+            <div class="max-w-3xl mx-auto relative">
+                <div id="preview-box" class="hidden absolute bottom-full mb-4 glass p-2 rounded-xl border-purple-500 shadow-2xl">
+                    <img id="img-preview" class="w-32 h-32 object-cover rounded-lg">
+                    <button onclick="removeImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </div>
+
+                <div class="glass rounded-2xl p-2 flex items-end gap-2 border-white/10 shadow-2xl focus-within:border-purple-500/50 transition-all">
+                    <input type="file" id="file-input" class="hidden" accept="image/*" onchange="processImage(this)">
+                    <button onclick="triggerFileInput()" class="p-3 text-gray-400 hover:text-white transition"><i data-lucide="camera" class="w-6 h-6"></i></button>
+                    <textarea id="msg-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-3 text-sm outline-none resize-none" placeholder="Напиши повідомлення..."></textarea>
+                    <button onclick="handleSend()" class="bg-purple-600 p-3 rounded-xl text-white hover:bg-purple-500 shadow-lg"><i data-lucide="send" class="w-6 h-6"></i></button>
                 </div>
             </div>
         </footer>
     </main>
 
-    <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="glass p-8 rounded-3xl w-96 border border-white/10 shadow-2xl text-white">
+    <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
+        <div class="glass p-8 rounded-3xl w-80 border border-white/10 shadow-2xl text-white">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Налаштування</h2>
+                <h2 class="text-xl font-bold" id="txt-settings-title">Налаштування</h2>
                 <button onclick="toggleSettings()" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
             </div>
             <div class="space-y-6">
                 <div>
-                    <label class="text-xs text-gray-500 block mb-2">ТЕМА ОФОРМЛЕННЯ</label>
-                    <select onchange="changeTheme(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none">
-                        <option value="dark" class="bg-gray-900 text-white">Темна</option>
-                        <option value="light" class="bg-gray-900 text-white">Світла</option>
+                    <label class="text-[10px] text-gray-500 block mb-2 font-bold uppercase" id="txt-lang-label">Мова / Language</label>
+                    <select id="lang-select" onchange="changeLang(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm outline-none">
+                        <option value="uk" class="bg-gray-900">Українська</option>
+                        <option value="en" class="bg-gray-900">English</option>
                     </select>
                 </div>
             </div>
@@ -119,98 +107,128 @@
     </div>
 
     <script>
-        // === НАЛАШТУВАННЯ ===
-        const GROQ_API_KEY = "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";
+        const GROQ_KEY = "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";
         
-        const firebaseConfig = {
+        // Переклади
+        const translations = {
+            uk: {
+                newChat: "Новий чат", menuLabel: "Меню", myContent: "Мій контент", settings: "Налаштування",
+                welcome: "Привіт! Я OrionAI. Очікую на ваші запитання або фото.", inputPlaceholder: "Напиши повідомлення...",
+                settingsTitle: "Налаштування", langLabel: "Мова", proBtn: "АКТИВУВАТИ PRO"
+            },
+            en: {
+                newChat: "New Chat", menuLabel: "Menu", myContent: "My Content", settings: "Settings",
+                welcome: "Hello! I'm OrionAI. Waiting for your questions or photos.", inputPlaceholder: "Type a message...",
+                settingsTitle: "Settings", langLabel: "Language", proBtn: "ACTIVATE PRO"
+            }
+        };
+
+        let currentLang = 'uk';
+        let user = null;
+        let pro = false;
+        let base64Image = null;
+
+        firebase.initializeApp({
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
             authDomain: "orionai-92335.firebaseapp.com",
             projectId: "orionai-92335",
             appId: "1:683751684702:web:f51ec5465f5eb6727452cf"
-        };
-        firebase.initializeApp(firebaseConfig);
+        });
 
-        let isPro = false;
-        let proRequests = 20;
-        let currentUser = null;
+        function changeLang(l) {
+            currentLang = l;
+            const t = translations[l];
+            document.getElementById('txt-new-chat').innerText = t.newChat;
+            document.getElementById('txt-menu-label').innerText = t.menuLabel;
+            document.getElementById('txt-my-content').innerText = t.myContent;
+            document.getElementById('txt-settings').innerText = t.settings;
+            document.getElementById('txt-settings-title').innerText = t.settingsTitle;
+            document.getElementById('txt-lang-label').innerText = t.langLabel;
+            document.getElementById('msg-input').placeholder = t.inputPlaceholder;
+            if(!pro) document.getElementById('pro-btn').innerText = t.proBtn;
+        }
 
-        lucide.createIcons();
-
-        function toggleSidebar() { document.body.classList.toggle('sidebar-hidden'); }
         function toggleSettings() {
             const m = document.getElementById('settings-modal');
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-        }
-        function changeTheme(t) { document.body.className = `h-screen flex ${t}-theme`; }
-
-        async function handleSend() {
-            const input = document.getElementById('msg-input');
-            const val = input.value.trim();
-            if (!val || !GROQ_API_KEY) return;
-
-            if (isPro && proRequests > 0) {
-                proRequests--;
-                document.getElementById('requests-left').innerText = proRequests;
-            }
-
-            const chat = document.getElementById('chat-display');
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto mb-4"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white shadow-lg">${val}</div></div>`);
-            
-            const aiId = 'ai-' + Date.now();
-            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start mb-4"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl text-white"><i data-lucide="bot" class="w-6 h-6"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">OrionAI думає...</div></div></div>`);
-            
-            lucide.createIcons();
-            input.value = "";
-            chat.scrollTop = chat.scrollHeight;
-
-            try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${GROQ_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [{ role: "user", content: val }]
-                    })
-                });
-
-                const data = await response.json();
-                document.getElementById(aiId).innerText = data.choices[0].message.content;
-            } catch (e) {
-                document.getElementById(aiId).innerText = "Сталася помилка підключення.";
-            }
-            chat.scrollTop = chat.scrollHeight;
         }
 
         function handleLogin() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider).then(res => {
-                currentUser = res.user;
+                user = res.user;
                 document.getElementById('login-btn').classList.add('hidden');
-                document.getElementById('user-ui').classList.replace('hidden', 'flex');
-                document.getElementById('user-name').innerText = res.user.displayName;
-                document.getElementById('user-pic').src = res.user.photoURL;
+                document.getElementById('user-info').classList.replace('hidden', 'flex');
+                document.getElementById('user-pic').src = user.photoURL;
             });
         }
 
-        function activatePro() {
-            if (!currentUser) return alert("Будь ласка, увійдіть в акаунт!");
-            isPro = true;
-            document.getElementById('pro-btn').innerText = "PRO АКТИВНО ✨";
-            document.getElementById('pro-counter').classList.remove('hidden');
-            document.getElementById('badge-pro').classList.remove('hidden');
+        function handleProClick() {
+            if (!user) {
+                alert(currentLang === 'uk' ? "Спочатку увійдіть!" : "Login first!");
+            } else {
+                pro = true;
+                document.getElementById('pro-btn').innerText = "PRO ACTIVE ✨";
+                document.getElementById('pro-btn').classList.replace('pro-gradient', 'bg-green-600');
+            }
         }
 
-        function newChat() { document.getElementById('chat-display').innerHTML = ""; }
+        function triggerFileInput() { if(pro) document.getElementById('file-input').click(); else alert("PRO Only!"); }
         
-        document.getElementById('msg-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
+        function processImage(input) {
+            if (input.files[0]) {
+                const r = new FileReader();
+                r.onload = (e) => {
+                    base64Image = e.target.result;
+                    document.getElementById('img-preview').src = base64Image;
+                    document.getElementById('preview-box').classList.remove('hidden');
+                };
+                r.readAsDataURL(input.files[0]);
             }
-        });
+        }
+
+        function removeImage() {
+            base64Image = null;
+            document.getElementById('preview-box').classList.add('hidden');
+        }
+
+        async function handleSend() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text && !base64Image) return;
+
+            const chat = document.getElementById('chat-display');
+            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm text-white shadow-xl">${base64Image ? `<img src="${base64Image}" class="w-40 rounded mb-2">` : ''}${text}</div></div>`);
+            
+            const aiId = 'ai-' + Date.now();
+            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center text-white shrink-0"><i data-lucide="bot"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm"><div class="thinking">OrionAI...</div></div></div>`);
+            
+            const currentImg = base64Image;
+            removeImage(); input.value = ""; chat.scrollTop = chat.scrollHeight; lucide.createIcons();
+
+            try {
+                const payload = currentImg && pro ? {
+                    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+                    messages: [{ role: "user", content: [{ type: "text", text: text || "Analyze this" }, { type: "image_url", image_url: { url: currentImg } }] }]
+                } : {
+                    model: "llama-3.3-70b-versatile",
+                    messages: [{ role: "user", content: text }]
+                };
+
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                document.getElementById(aiId).innerText = data.choices[0].message.content;
+            } catch (e) {
+                document.getElementById(aiId).innerText = "Error API.";
+            }
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        lucide.createIcons();
     </script>
 </body>
 </html>
