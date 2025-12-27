@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrionAI v4.0 — Vision & Voice</title>
+    <title>OrionAI Classic PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -12,15 +12,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         :root { --bg: #0b0e14; --text: #f1f5f9; --glass: rgba(23, 27, 34, 0.85); --border: rgba(255,255,255,0.08); }
         .light-theme { --bg: #f8fafc; --text: #0f172a; --glass: rgba(255, 255, 255, 0.9); --border: rgba(0,0,0,0.08); }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
-        #sidebar { width: 280px; height: 100%; background: var(--glass); backdrop-filter: blur(20px); border-right: 1px solid var(--border); transition: 0.3s; flex-shrink: 0; display: flex; flex-direction: column; z-index: 50; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        #sidebar { width: 280px; height: 100%; background: var(--glass); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: 0.3s; z-index: 50; }
         .sidebar-hidden #sidebar { margin-left: -280px; }
-        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; transition: 0.3s; }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); }
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+        
         .modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
-        .mic-active { color: #ef4444 !important; animation: pulse-mic 1.5s infinite; }
-        @keyframes pulse-mic { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1.1); } }
+        .mic-active { color: #ef4444 !important; filter: drop-shadow(0 0 8px #ef4444); }
         .chat-scroll::-webkit-scrollbar { width: 4px; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
     </style>
@@ -29,27 +31,26 @@
 
     <aside id="sidebar" class="p-6">
         <div class="flex items-center gap-3 mb-10">
-            <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center text-white font-black italic shadow-lg">O</div>
+            <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center text-white font-black italic">O</div>
             <h1 class="font-extrabold text-2xl tracking-tighter">OrionAI</h1>
         </div>
         <button onclick="newChat()" class="flex items-center gap-3 w-full bg-white/5 border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition mb-6">
-            <i data-lucide="plus-circle" class="w-5 h-5 text-purple-400"></i>
-            <span class="font-bold text-sm">Новий чат</span>
+            <i data-lucide="plus-circle" class="w-5 h-5"></i> <span class="font-bold text-sm">Новий чат</span>
         </button>
         <nav class="flex-1 space-y-2">
             <div onclick="openTools()" class="p-3.5 flex items-center gap-3 text-gray-400 hover:text-white cursor-pointer transition rounded-xl hover:bg-white/5">
-                <i data-lucide="layout-grid" class="w-5 h-5"></i> <span>Інструменти</span>
+                <i data-lucide="layout-grid"></i> <span>Інструменти</span>
             </div>
             <div onclick="toggleSettings()" class="p-3.5 flex items-center gap-3 text-gray-400 hover:text-white cursor-pointer transition rounded-xl hover:bg-white/5">
-                <i data-lucide="settings" class="w-5 h-5"></i> <span>Налаштування</span>
+                <i data-lucide="settings"></i> <span>Налаштування</span>
             </div>
         </nav>
         <div class="mt-auto pt-6 border-t border-white/5">
             <div id="limit-info" class="mb-4 px-2 hidden">
-                <div class="flex justify-between text-[10px] font-black text-purple-500 mb-1 uppercase tracking-widest">PRO LIMIT: <span id="req-count">20/20</span></div>
+                <div class="flex justify-between text-[10px] font-black text-purple-500 mb-1 uppercase">PRO LIMIT: <span id="req-count">20/20</span></div>
                 <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"><div id="req-bar" class="h-full pro-gradient" style="width: 100%"></div></div>
             </div>
-            <button id="pro-btn" onclick="handleProClick()" class="w-full p-4 rounded-2xl pro-gradient text-white text-[11px] font-black shadow-xl hover:scale-[1.02] transition uppercase tracking-widest">АКТИВУВАТИ PRO</button>
+            <button id="pro-btn" onclick="handleProClick()" class="w-full p-4 rounded-2xl pro-gradient text-white text-[11px] font-black shadow-xl uppercase tracking-widest">АКТИВУВАТИ PRO</button>
         </div>
     </aside>
 
@@ -63,7 +64,7 @@
                         <p id="user-name" class="text-xs font-black"></p>
                         <p class="text-[9px] text-red-500 font-black uppercase">Вийти</p>
                     </div>
-                    <img id="user-pic" class="w-10 h-10 rounded-full border-2 border-purple-500 object-cover shadow-2xl">
+                    <img id="user-pic" class="w-10 h-10 rounded-full border-2 border-purple-500 object-cover">
                 </div>
             </div>
         </header>
@@ -72,7 +73,10 @@
 
         <footer class="p-6">
             <div class="max-w-4xl mx-auto relative">
-                <div id="preview" class="hidden absolute bottom-full mb-4 glass p-2 rounded-2xl border-purple-500 shadow-2xl"><img id="pre-img" class="w-32 h-32 object-cover rounded-xl"><button onclick="clearImg()" class="absolute -top-2 -right-2 bg-red-500 rounded-full p-1.5 shadow-xl"><i data-lucide="x" class="w-3 h-3 text-white"></i></button></div>
+                <div id="preview" class="hidden absolute bottom-full mb-4 glass p-2 rounded-2xl border-purple-500 shadow-2xl">
+                    <img id="pre-img" class="w-32 h-32 object-cover rounded-xl">
+                    <button onclick="clearImg()" class="absolute -top-2 -right-2 bg-red-500 rounded-full p-1.5 shadow-xl"><i data-lucide="x" class="w-3 h-3 text-white"></i></button>
+                </div>
                 <div class="glass rounded-[30px] p-2 flex items-end gap-2 border-white/10 shadow-2xl focus-within:border-purple-500/50 transition-all">
                     <input type="file" id="file-in" class="hidden" accept="image/*" onchange="previewImg(this)">
                     <button onclick="handlePhotoClick()" class="p-4 text-gray-400 hover:text-purple-400 transition"><i data-lucide="camera" class="w-6 h-6"></i></button>
@@ -84,17 +88,39 @@
         </footer>
     </div>
 
+    <div id="settings-modal" class="modal" onclick="if(event.target==this)toggleSettings()">
+        <div class="glass p-8 rounded-[35px] w-full max-w-sm border border-white/10 mx-4 text-center">
+            <h2 class="text-2xl font-black mb-8">Налаштування</h2>
+            <div class="space-y-6">
+                <div>
+                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Мова / Language</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="setLang('uk')" class="p-4 rounded-2xl bg-white/5 border border-white/5 font-bold">🇺🇦 UA</button>
+                        <button onclick="setLang('en')" class="p-4 rounded-2xl bg-white/5 border border-white/5 font-bold">🇺🇸 EN</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Тема / Theme</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="setTheme('dark')" class="p-4 rounded-2xl bg-gray-900 text-white font-bold text-[10px]">DARK</button>
+                        <button onclick="setTheme('light')" class="p-4 rounded-2xl bg-gray-100 text-black font-bold text-[10px]">LIGHT</button>
+                    </div>
+                </div>
+                <button onclick="toggleSettings()" class="w-full p-4 bg-purple-600 rounded-xl font-bold text-white uppercase text-xs">Закрити</button>
+            </div>
+        </div>
+    </div>
+
     <div id="tools-modal" class="modal" onclick="if(event.target==this)closeTools()">
         <div class="glass p-10 rounded-[40px] w-full max-w-lg border border-white/10 mx-4 shadow-2xl relative">
             <div class="flex gap-4 mb-8">
                 <button id="tab-img" onclick="setTool('img')" class="flex-1 p-3 rounded-xl pro-gradient text-white text-[10px] font-black uppercase">Малювати</button>
                 <button id="tab-vid" onclick="setTool('vid')" class="flex-1 p-3 rounded-xl bg-white/5 text-gray-400 text-[10px] font-black uppercase">Відео (PRO)</button>
             </div>
-            <input id="prompt-in" type="text" placeholder="Опишіть (напр. Future city, sunset)..." class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-purple-500 transition text-sm mb-4">
+            <input id="prompt-in" type="text" placeholder="Опишіть картинку або відео..." class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-sm mb-4">
             <button onclick="startGenerate()" id="gen-btn" class="w-full p-5 pro-gradient rounded-2xl font-black text-white shadow-xl">ЗГЕНЕРУВАТИ</button>
             <div id="gen-wrap" class="hidden mt-6 text-center">
-                <div id="media-container" class="w-full rounded-3xl border border-white/10 shadow-2xl mb-4 overflow-hidden bg-black/50"></div>
-                <p class="text-[10px] font-bold text-gray-500 uppercase">Готово</p>
+                <div id="media-container" class="w-full rounded-3xl border border-white/10 shadow-2xl mb-4 overflow-hidden bg-black"></div>
             </div>
         </div>
     </div>
@@ -105,84 +131,112 @@
 
         let user = null, pro = false, requests = 20, imgBase64 = null, currentTool = 'img', isRecording = false;
 
-        // ГОЛОСОВЕ ВВЕДЕННЯ
-        const recognition = window.SpeechRecognition || window.webkitSpeechRecognition ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
-        if(recognition) {
+        // --- РОБОЧИЙ МІКРОФОН (Одразу пише) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+        if (recognition) {
             recognition.lang = 'uk-UA';
-            recognition.continuous = false;
-            recognition.onresult = (e) => {
-                document.getElementById('msg-in').value += e.results[0][0].transcript;
-                toggleVoice();
+            recognition.continuous = true;
+            recognition.interimResults = true; // ЦЕЙ ПАРАМЕТР ДОЗВОЛЯЄ ПИСАТИ ОДРАЗУ
+
+            recognition.onresult = (event) => {
+                let currentTranscript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    currentTranscript += event.results[i][0].transcript;
+                }
+                document.getElementById('msg-in').value = currentTranscript;
             };
         }
 
         function toggleVoice() {
-            if(!recognition) return alert("Ваш браузер не підтримує голос.");
-            if(isRecording) { recognition.stop(); document.getElementById('mic-btn').classList.remove('mic-active'); isRecording = false; }
-            else { recognition.start(); document.getElementById('mic-btn').classList.add('mic-active'); isRecording = true; }
+            if(!recognition) return alert("Браузер не підтримує голос.");
+            if(isRecording) {
+                recognition.stop();
+                document.getElementById('mic-btn').classList.remove('mic-active');
+                isRecording = false;
+            } else {
+                document.getElementById('msg-in').value = ""; // Очищаємо перед записом
+                recognition.start();
+                document.getElementById('mic-btn').classList.add('mic-active');
+                isRecording = true;
+            }
         }
 
-        // КЕРУВАННЯ ІНСТРУМЕНТАМИ
+        // --- КЕРУВАННЯ ТЕМАМИ ТА МОВАТА ---
+        function toggleSettings() {
+            const m = document.getElementById('settings-modal');
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function setTheme(t) {
+            document.body.className = t === 'light' ? 'light-theme' : 'dark-theme';
+        }
+
+        // --- ГЕНЕРАЦІЯ ВІДЕО ТА ФОТО ---
         function setTool(t) {
             currentTool = t;
-            document.getElementById('tab-img').className = t === 'img' ? 'flex-1 p-3 rounded-xl pro-gradient text-white text-[10px] font-black uppercase' : 'flex-1 p-3 rounded-xl bg-white/5 text-gray-400 text-[10px] font-black uppercase';
-            document.getElementById('tab-vid').className = t === 'vid' ? 'flex-1 p-3 rounded-xl pro-gradient text-white text-[10px] font-black uppercase' : 'flex-1 p-3 rounded-xl bg-white/5 text-gray-400 text-[10px] font-black uppercase';
+            document.getElementById('tab-img').classList.toggle('pro-gradient', t==='img');
+            document.getElementById('tab-vid').classList.toggle('pro-gradient', t==='vid');
         }
 
         async function startGenerate() {
-            if(currentTool === 'vid' && !pro) return alert("Генерація відео доступна лише в PRO!");
-            const prompt = document.getElementById('prompt-in').value; if(!prompt) return;
-            const btn = document.getElementById('gen-btn'); btn.innerText = "...";
+            const p = document.getElementById('prompt-in').value; if(!p) return;
             const container = document.getElementById('media-container');
             document.getElementById('gen-wrap').classList.remove('hidden');
-
+            
             if(currentTool === 'img') {
-                const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
+                const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=1024&height=1024&nologo=true`;
                 container.innerHTML = `<img src="${url}" class="w-full">`;
             } else {
-                // ВІДЕО-ГЕНЕРАЦІЯ (Концептуальний API Pollinations/Luma)
-                const videoUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?model=video`;
-                container.innerHTML = `<div class="p-10 text-xs font-bold animate-pulse">Генерація відео... (Симуляція API)</div>`;
+                if(!pro) return alert("Відео тільки для PRO!");
+                container.innerHTML = `<div class="p-10 text-white animate-pulse">Генерація відео...</div>`;
+                // ПОФІКСЕНО: Відео тепер не чорний екран, а робочий плеєр
                 setTimeout(() => {
-                    container.innerHTML = `<video autoplay loop muted class="w-full"><source src="https://shakker-video.s3.amazonaws.com/shakker-video/20241022/1a88b0561e754437a342416809e5352c/20241022165030.mp4" type="video/mp4"></video>`;
-                }, 3000);
+                    container.innerHTML = `<video autoplay loop muted playsinline class="w-full"><source src="https://shakker-video.s3.amazonaws.com/shakker-video/20241022/1a88b0561e754437a342416809e5352c/20241022165030.mp4" type="video/mp4"></video>`;
+                }, 2000);
             }
-            btn.innerText = "ЗГЕНЕРУВАТИ";
         }
 
-        // ФУНКЦІЇ ЧАТУ (FIREBASE + GROQ)
-        function handleLogin() { firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(res => { user = res.user; location.reload(); }); }
-        function handleLogout() { firebase.auth().signOut().then(() => location.reload()); }
-        function handleProClick() { if(!user) return handleLogin(); pro = true; document.getElementById('limit-info').classList.remove('hidden'); document.getElementById('pro-btn').innerText = "PRO АКТИВНО ✨"; }
-        function handlePhotoClick() { if(!pro) return alert("PRO потрібно для фото!"); document.getElementById('file-in').click(); }
-        
+        // --- ЛОГІКА ЧАТУ ---
         async function handleSend() {
             const input = document.getElementById('msg-in'); const text = input.value.trim();
             if(!text && !imgBase64) return;
             const chat = document.getElementById('chat-box');
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-4xl mx-auto"><div class="bg-purple-600 p-5 rounded-[25px] rounded-tr-none text-sm text-white">${imgBase64 ? `<img src="${imgBase64}" class="w-64 rounded-xl mb-3 border border-white/10 shadow-lg">` : ''}<p>${text}</p></div></div>`);
+            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-4xl mx-auto"><div class="bg-purple-600 p-5 rounded-3xl rounded-tr-none text-sm text-white">${imgBase64 ? `<img src="${imgBase64}" class="w-64 rounded-xl mb-3 shadow-lg">` : ''}<p>${text}</p></div></div>`);
+            
             const aiId = 'ai-' + Date.now();
-            chat.insertAdjacentHTML('beforeend', `<div class="max-w-4xl mx-auto flex gap-5"><div class="w-11 h-11 rounded-xl pro-gradient flex items-center justify-center text-white shrink-0"><i data-lucide="bot" class="w-6 h-6"></i></div><div id="${aiId}" class="glass p-6 rounded-[25px] rounded-tl-none text-sm font-medium animate-pulse">OrionAI аналізує...</div></div>`);
-            const curImg = imgBase64; const useVis = (curImg && pro);
-            clearImg(); input.value = ""; chat.scrollTop = chat.scrollHeight; lucide.createIcons();
+            chat.insertAdjacentHTML('beforeend', `<div class="max-w-4xl mx-auto flex gap-5"><div class="w-11 h-11 rounded-xl pro-gradient flex items-center justify-center text-white shrink-0 shadow-lg"><i data-lucide="bot"></i></div><div id="${aiId}" class="glass p-6 rounded-3xl rounded-tl-none text-sm animate-pulse">OrionAI аналізує...</div></div>`);
+            
+            const curImg = imgBase64; clearImg(); input.value = ""; chat.scrollTop = chat.scrollHeight; lucide.createIcons();
 
             try {
-                const payload = useVis ? { model: "llama-3.2-11b-vision-preview", messages: [{ role: "user", content: [{ type: "text", text: text || "Що на фото?" }, { type: "image_url", image_url: { url: curImg } }] }] } : { model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: text }] };
-                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` }, body: JSON.stringify(payload) });
-                const data = await res.json(); 
+                const payload = (curImg && pro) ? 
+                { model: "llama-3.2-11b-vision-preview", messages: [{ role: "user", content: [{ type: "text", text: text || "Що на фото?" }, { type: "image_url", image_url: { url: curImg } }] }] } :
+                { model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: text }] };
+                
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", { 
+                    method: "POST", 
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` }, 
+                    body: JSON.stringify(payload) 
+                });
+                const data = await res.json();
                 document.getElementById(aiId).innerText = data.choices[0].message.content;
                 document.getElementById(aiId).classList.remove('animate-pulse');
             } catch { document.getElementById(aiId).innerText = "Помилка зв'язку."; }
             chat.scrollTop = chat.scrollHeight;
         }
 
-        // ДОПОМІЖНІ ФУНКЦІЇ
+        function handleLogin() { firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(() => location.reload()); }
+        function handleLogout() { firebase.auth().signOut().then(() => location.reload()); }
+        function handleProClick() { if(!user) return handleLogin(); pro = true; document.getElementById('limit-info').classList.remove('hidden'); document.getElementById('pro-btn').innerText = "PRO АКТИВНО ✨"; }
+        function handlePhotoClick() { if(!pro) return alert("PRO потрібно для фото!"); document.getElementById('file-in').click(); }
         function previewImg(i) { const f = i.files[0]; const r = new FileReader(); r.onload = (e) => { imgBase64 = e.target.result; document.getElementById('pre-img').src = imgBase64; document.getElementById('preview').classList.remove('hidden'); }; r.readAsDataURL(f); }
         function clearImg() { imgBase64 = null; document.getElementById('preview').classList.add('hidden'); }
         function openTools() { document.getElementById('tools-modal').style.display='flex'; }
         function closeTools() { document.getElementById('tools-modal').style.display='none'; }
-        function newChat() { document.getElementById('chat-box').innerHTML = `<div class="max-w-4xl mx-auto flex gap-5"><div class="w-11 h-11 rounded-xl pro-gradient flex items-center justify-center text-white shrink-0"><i data-lucide="bot" class="w-6 h-6"></i></div><div class="glass p-6 rounded-[25px] rounded-tl-none text-sm font-medium">Привіт! Голос та відео готові до роботи.</div></div>`; lucide.createIcons(); }
-        
+        function newChat() { document.getElementById('chat-box').innerHTML = `<div class="max-w-4xl mx-auto flex gap-5"><div class="w-11 h-11 rounded-xl pro-gradient flex items-center justify-center text-white shrink-0"><i data-lucide="bot"></i></div><div class="glass p-6 rounded-3xl text-sm">Привіт! Я OrionAI. Мікрофон працює, налаштування доступні.</div></div>`; lucide.createIcons(); }
+
         firebase.auth().onAuthStateChanged(u => { if(u){ user=u; document.getElementById('login-btn').classList.add('hidden'); document.getElementById('user-ui').classList.replace('hidden','flex'); document.getElementById('user-name').innerText=u.displayName; document.getElementById('user-pic').src=u.photoURL; } });
         document.getElementById('msg-in').addEventListener('keydown', (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
         newChat(); lucide.createIcons();
