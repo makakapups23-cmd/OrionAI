@@ -3,144 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrionAI Elite — Stable Edition</title>
+    <title>OrionAI Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #e2e8f0; overflow: hidden; height: 100vh; transition: 0.3s; }
-        body.light-theme { background-color: #f1f5f9; color: #1e293b; }
-        
-        .glass { background: rgba(23, 27, 34, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .light-theme .glass { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0,0,0,0.05); }
-        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #e2e8f0; overflow: hidden; height: 100vh; }
+        .dark-theme { background-color: #0b0e14; color: #e2e8f0; }
+        .light-theme { background-color: #f8fafc; color: #0f172a; }
+        .glass { background: rgba(23, 27, 34, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        .light-theme .glass { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.1); }
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
-        .user-avatar-ring { padding: 2px; background: linear-gradient(45deg, #6366f1, #a855f7); border-radius: 14px; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
-        
-        #sidebar { transition: all 0.4s ease; }
-        .sidebar-hidden #sidebar { transform: translateX(-100%); width: 0; padding: 0; opacity: 0; }
-        
-        .thinking { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        
-        .modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); }
+        .avatar-glow { padding: 2px; background: linear-gradient(45deg, #6366f1, #a855f7); border-radius: 50%; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+        .chat-scroll::-webkit-scrollbar { width: 4px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        #settings-modal, #tools-modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); }
     </style>
 </head>
 <body class="flex dark-theme">
 
-    <aside id="sidebar" class="w-72 glass border-r border-white/5 flex flex-col p-5 z-20 shrink-0">
-        <div class="flex items-center gap-3 mb-10 px-2">
-            <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center text-white shadow-2xl font-black text-xl italic">O</div>
+    <aside id="sidebar" class="w-72 glass border-r border-white/5 flex flex-col p-6 shrink-0 transition-all duration-300">
+        <div class="flex items-center gap-3 mb-10">
+            <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center text-white font-black italic shadow-lg">O</div>
             <h1 class="font-extrabold text-2xl tracking-tighter">OrionAI</h1>
         </div>
 
-        <button onclick="newChat()" class="flex items-center gap-3 w-full bg-white/5 border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition mb-6 shadow-sm">
+        <button onclick="newChat()" class="flex items-center gap-3 w-full bg-white/5 border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition mb-6">
             <i data-lucide="plus-circle" class="w-5 h-5 text-purple-400"></i>
             <span class="font-semibold text-sm">Новий чат</span>
         </button>
 
-        <nav class="flex-1 space-y-2 overflow-y-auto">
-            <div class="p-3 flex items-center gap-3 text-gray-400 hover:bg-white/5 rounded-xl transition cursor-pointer" onclick="openTools()">
-                <i data-lucide="wrench" class="w-5 h-5"></i>
-                <span class="font-medium text-sm">Інструменти</span>
+        <nav class="flex-1 space-y-2">
+            <div onclick="openTools()" class="p-3 flex items-center gap-3 text-gray-400 hover:text-white cursor-pointer transition">
+                <i data-lucide="wrench" class="w-5 h-5"></i> <span>Інструменти</span>
             </div>
-            <div class="p-3 flex items-center gap-3 text-gray-400 hover:bg-white/5 rounded-xl transition cursor-pointer" onclick="toggleSettings()">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-                <span class="font-medium text-sm">Налаштування</span>
+            <div onclick="toggleSettings()" class="p-3 flex items-center gap-3 text-gray-400 hover:text-white cursor-pointer transition">
+                <i data-lucide="settings" class="w-5 h-5"></i> <span>Налаштування</span>
             </div>
         </nav>
 
-        <div class="mt-auto pt-6 border-t border-white/5 space-y-4">
-            <div id="limit-box" class="hidden px-2 animate-fade-in">
-                <div class="flex justify-between text-[10px] font-bold mb-1 uppercase text-purple-400">
-                    <span>PRO Ліміт</span> <span id="limit-count">20/20</span>
-                </div>
-                <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div id="limit-bar" class="h-full pro-gradient transition-all duration-500" style="width: 100%"></div>
-                </div>
+        <div class="mt-auto pt-6 border-t border-white/5">
+            <div id="limit-info" class="hidden mb-4 px-2">
+                <div class="flex justify-between text-[10px] font-bold text-purple-400 mb-1 uppercase">PRO: <span id="req-count">20/20</span></div>
+                <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden"><div id="req-bar" class="h-full pro-gradient" style="width: 100%"></div></div>
             </div>
-            <button id="pro-btn" onclick="handleProClick()" class="w-full p-4 rounded-2xl pro-gradient text-white text-xs font-black shadow-2xl hover:scale-[1.03] transition tracking-widest uppercase">
+            <button id="pro-btn" onclick="handleProClick()" class="w-full p-4 rounded-2xl pro-gradient text-white text-xs font-black shadow-2xl hover:scale-[1.02] transition uppercase tracking-widest">
                 АКТИВУВАТИ PRO
             </button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0">
-        <header class="h-20 glass border-b border-white/5 flex justify-between items-center px-8 z-10 shrink-0">
-            <div class="flex items-center gap-6">
-                <button onclick="document.body.classList.toggle('sidebar-hidden')" class="p-2.5 hover:bg-white/10 rounded-xl text-gray-400"><i data-lucide="align-left"></i></button>
-                <div class="flex items-center gap-3 px-4 py-2 rounded-2xl bg-black/20 border border-white/5 shadow-inner">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span id="version-text" class="text-[11px] font-bold text-gray-400 tracking-wider uppercase">Orion v3.8 — Online</span>
-                </div>
+    <main class="flex-1 flex flex-col min-w-0 relative">
+        <header class="h-20 glass border-b border-white/5 flex justify-between items-center px-8 shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="document.body.classList.toggle('sidebar-hidden')" class="p-2 hover:bg-white/10 rounded-lg text-gray-400"><i data-lucide="menu"></i></button>
+                <span id="ver-badge" class="text-[10px] font-bold bg-white/5 px-3 py-1 rounded-full text-gray-400 border border-white/10 uppercase">v3.9 FREE</span>
             </div>
 
             <div id="auth-section">
-                <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-6 py-2.5 rounded-2xl text-xs font-black shadow-xl">УВІЙТИ</button>
-                <div id="user-info" class="hidden items-center gap-4">
-                    <div class="text-right"><p id="user-name" class="text-xs font-bold"></p><p id="account-type" class="text-[10px] text-purple-500 font-bold uppercase">FREE</p></div>
-                    <div class="user-avatar-ring">
-                        <img id="user-pic" class="w-10 h-10 rounded-xl object-cover border-2 border-[#0b0e14]">
-                    </div>
+                <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-6 py-2 rounded-xl text-xs font-black shadow-lg">УВІЙТИ</button>
+                <div id="user-ui" class="hidden items-center gap-4">
+                    <div class="text-right"><p id="user-name" class="text-xs font-bold"></p><p class="text-[9px] text-purple-500 font-bold uppercase" id="acc-type">FREE ACCOUNT</p></div>
+                    <div class="avatar-glow"><img id="user-pic" class="w-10 h-10 rounded-full border-2 border-[#0b0e14]"></div>
                 </div>
             </div>
         </header>
 
-        <div id="chat-display" class="flex-1 overflow-y-auto p-6 md:p-12 space-y-10 chat-scroll">
-            <div class="max-w-4xl mx-auto flex gap-6 items-start">
-                <div class="w-12 h-12 rounded-2xl pro-gradient flex items-center justify-center text-white shrink-0 shadow-2xl"><i data-lucide="bot" class="w-7 h-7"></i></div>
-                <div class="glass p-6 rounded-3xl rounded-tl-none text-sm border-white/10 shadow-2xl max-w-[85%]">
-                    Вітаю! Я OrionAI. Сесія збережена, я готовий до роботи.
-                </div>
+        <div id="chat-box" class="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 chat-scroll">
+            <div class="max-w-4xl mx-auto flex gap-6">
+                <div class="w-12 h-12 rounded-2xl pro-gradient flex items-center justify-center text-white shrink-0"><i data-lucide="bot"></i></div>
+                <div class="glass p-6 rounded-3xl rounded-tl-none text-sm border-white/10 shadow-xl max-w-[80%]">Привіт! Чим можу допомогти сьогодні?</div>
             </div>
         </div>
 
         <footer class="p-6 md:p-10">
             <div class="max-w-4xl mx-auto relative">
-                <div id="preview-box" class="hidden absolute bottom-full mb-6 glass p-3 rounded-2xl border-purple-500/50 shadow-2xl">
-                    <img id="img-preview" class="w-32 h-32 object-cover rounded-xl shadow-lg">
-                    <button onclick="removeImage()" class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1.5 shadow-xl"><i data-lucide="x" class="w-4 h-4"></i></button>
-                </div>
-                <div class="glass rounded-[30px] p-3 flex items-end gap-3 border-white/10 shadow-2xl focus-within:border-purple-500/50 transition-all">
-                    <input type="file" id="file-input" class="hidden" accept="image/*" onchange="processImage(this)">
-                    <button onclick="triggerFileInput()" class="p-4 text-gray-400 hover:text-purple-400 transition"><i data-lucide="camera" class="w-7 h-7"></i></button>
-                    <textarea id="msg-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-4 text-sm outline-none resize-none max-h-64 font-medium" placeholder="Запитайте щось..."></textarea>
-                    <button onclick="handleSend()" class="bg-purple-600 p-4 rounded-2xl text-white hover:bg-purple-500 shadow-xl transition active:scale-90"><i data-lucide="send" class="w-7 h-7"></i></button>
+                <div id="preview" class="hidden absolute bottom-full mb-4 glass p-2 rounded-2xl border-purple-500"><img id="pre-img" class="w-32 h-32 object-cover rounded-xl"><button onclick="clearImg()" class="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"><i data-lucide="x" class="w-3 h-3 text-white"></i></button></div>
+                <div class="glass rounded-[28px] p-2 flex items-end gap-2 border-white/10 shadow-2xl">
+                    <input type="file" id="file-in" class="hidden" accept="image/*" onchange="previewImg(this)">
+                    <button onclick="document.getElementById('file-in').click()" class="p-4 text-gray-400 hover:text-purple-400 transition"><i data-lucide="camera"></i></button>
+                    <textarea id="msg-in" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-4 text-sm outline-none resize-none" placeholder="Запитай щось..."></textarea>
+                    <button onclick="handleSend()" class="bg-purple-600 p-4 rounded-2xl text-white hover:bg-purple-500 transition"><i data-lucide="send"></i></button>
                 </div>
             </div>
         </footer>
     </main>
 
-    <div id="settings-modal" class="modal">
+    <div id="settings-modal" onclick="if(event.target==this)toggleSettings()">
         <div class="glass p-10 rounded-[40px] w-full max-w-sm border border-white/10 mx-4">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-black">Налаштування</h2>
-                <button onclick="toggleSettings()" class="text-gray-400"><i data-lucide="x"></i></button>
-            </div>
-            <div class="space-y-6">
-                <button onclick="setTheme('dark')" class="w-full p-4 rounded-2xl bg-black/40 border border-white/5 font-bold hover:border-purple-500 transition">Темна тема</button>
-                <button onclick="setTheme('light')" class="w-full p-4 rounded-2xl bg-white text-black border font-bold hover:border-purple-500 transition">Світла тема</button>
+            <h2 class="text-2xl font-black mb-8">Налаштування</h2>
+            <div class="space-y-4">
+                <button onclick="setTheme('dark')" class="w-full p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500 transition font-bold">Темна тема</button>
+                <button onclick="setTheme('light')" class="w-full p-4 rounded-2xl bg-white text-black font-bold hover:shadow-lg transition">Світла тема</button>
+                <div class="pt-4 flex gap-2">
+                    <button onclick="alert('UA')" class="flex-1 p-3 bg-white/5 rounded-xl border border-white/5">🇺🇦 UA</button>
+                    <button onclick="alert('EN')" class="flex-1 p-3 bg-white/5 rounded-xl border border-white/5">🇺🇸 EN</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="tools-modal" class="modal">
-        <div class="glass p-10 rounded-[40px] w-full max-w-lg border border-white/10 mx-4 text-center">
-            <h2 class="text-2xl font-black mb-6">Генератор Фото</h2>
-            <input id="img-prompt" type="text" placeholder="Що намалювати?" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none mb-4">
-            <button onclick="generateImage()" id="gen-btn" class="w-full p-4 pro-gradient rounded-2xl font-bold">СТВОРИТИ</button>
-            <div id="gen-result" class="hidden mt-6">
-                <img id="result-img" class="w-full rounded-2xl border border-white/10">
-                <button onclick="closeTools()" class="mt-4 text-gray-500 text-xs">Закрити</button>
-            </div>
+    <div id="tools-modal" onclick="if(event.target==this)closeTools()">
+        <div class="glass p-10 rounded-[40px] w-full max-w-lg border border-white/10 mx-4">
+            <h2 class="text-2xl font-black mb-6">Створити фото</h2>
+            <input id="prompt-in" type="text" placeholder="Опишіть картинку..." class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none mb-4">
+            <button onclick="genImg()" id="gen-btn" class="w-full p-4 pro-gradient rounded-2xl font-bold">ЗГЕНЕРУВАТИ</button>
+            <img id="gen-res" class="hidden mt-6 w-full rounded-2xl border border-white/10">
         </div>
     </div>
 
     <script>
-        const GROQ_KEY = "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"; 
-
+        const API_KEY = "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";
         firebase.initializeApp({
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
             authDomain: "orionai-92335.firebaseapp.com",
@@ -148,38 +123,27 @@
             appId: "1:683751684702:web:f51ec5465f5eb6727452cf"
         });
 
-        let user = null;
-        let pro = false;
-        let proRequests = 20;
-
-        // Авто-перевірка користувача при завантаженні
-        firebase.auth().onAuthStateChanged((u) => {
-            if (u) {
-                user = u;
-                document.getElementById('login-btn').classList.add('hidden');
-                document.getElementById('user-info').classList.replace('hidden', 'flex');
-                document.getElementById('user-name').innerText = u.displayName;
-                document.getElementById('user-pic').src = u.photoURL;
-            }
-        });
+        let user = null; let pro = false; let requests = 20; let imgBase64 = null;
 
         function handleLogin() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider);
+            firebase.auth().signInWithPopup(provider).then(res => {
+                user = res.user;
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('user-ui').classList.replace('hidden', 'flex');
+                document.getElementById('user-name').innerText = user.displayName;
+                document.getElementById('user-pic').src = user.photoURL;
+            });
         }
 
         function newChat() {
-            document.getElementById('chat-display').innerHTML = `
-                <div class="max-w-4xl mx-auto flex gap-6 items-start">
-                    <div class="w-12 h-12 rounded-2xl pro-gradient flex items-center justify-center text-white shrink-0 shadow-2xl"><i data-lucide="bot" class="w-7 h-7"></i></div>
-                    <div class="glass p-6 rounded-3xl rounded-tl-none text-sm border-white/10 shadow-2xl max-w-[85%]">Чат очищено. Чим я можу допомогти?</div>
-                </div>`;
+            document.getElementById('chat-box').innerHTML = `<div class="max-w-4xl mx-auto flex gap-6"><div class="w-12 h-12 rounded-2xl pro-gradient flex items-center justify-center text-white shrink-0"><i data-lucide="bot"></i></div><div class="glass p-6 rounded-3xl text-sm border-white/10 shadow-xl max-w-[80%]">Чат очищено. Чим я можу допомогти?</div></div>`;
             lucide.createIcons();
         }
 
         function toggleSettings() {
-            const modal = document.getElementById('settings-modal');
-            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+            const m = document.getElementById('settings-modal');
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
         }
 
         function setTheme(t) {
@@ -187,26 +151,73 @@
             toggleSettings();
         }
 
-        function openTools() { document.getElementById('tools-modal').style.display = 'flex'; }
-        function closeTools() { document.getElementById('tools-modal').style.display = 'none'; }
-
-        // Решта логіки (Send, Image, Vision) залишається незмінною
-        async function handleSend() {
-            const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if (!text) return;
-            
-            const chat = document.getElementById('chat-display');
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-4xl mx-auto"><div class="bg-purple-600 p-5 rounded-3xl text-sm text-white shadow-xl">${text}</div></div>`);
-            input.value = "";
-            chat.scrollTop = chat.scrollHeight;
-            
-            // Тут твій код запиту до Groq як у попередній версії...
+        function handleProClick() {
+            if(!user) { handleLogin(); return; }
+            pro = true;
+            document.getElementById('pro-btn').innerText = "PRO АКТИВНО ✨";
+            document.getElementById('limit-info').classList.remove('hidden');
+            document.getElementById('acc-type').innerText = "PRO ACCOUNT";
+            document.getElementById('ver-badge').innerText = "v3.9 PRO";
         }
 
-        document.getElementById('msg-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
+        async function genImg() {
+            const p = document.getElementById('prompt-in').value; if(!p) return;
+            document.getElementById('gen-btn').innerText = "МАЛЮЮ...";
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=1024&height=1024&nologo=true`;
+            document.getElementById('gen-res').src = url;
+            document.getElementById('gen-res').classList.remove('hidden');
+            document.getElementById('gen-res').onload = () => document.getElementById('gen-btn').innerText = "ЗГЕНЕРУВАТИ";
+        }
+
+        function previewImg(input) {
+            if (input.files[0]) {
+                const r = new FileReader();
+                r.onload = (e) => {
+                    imgBase64 = e.target.result;
+                    document.getElementById('pre-img').src = imgBase64;
+                    document.getElementById('preview').classList.remove('hidden');
+                };
+                r.readAsDataURL(input.files[0]);
+            }
+        }
+        function clearImg() { imgBase64 = null; document.getElementById('preview').classList.add('hidden'); }
+
+        async function handleSend() {
+            const input = document.getElementById('msg-in');
+            const text = input.value.trim();
+            if(!text && !imgBase64) return;
+
+            const chat = document.getElementById('chat-box');
+            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-4xl mx-auto"><div class="bg-purple-600 p-5 rounded-3xl text-sm text-white shadow-xl">${imgBase64 ? `<img src="${imgBase64}" class="w-48 rounded-lg mb-2">` : ''}${text}</div></div>`);
+            
+            const aiId = 'ai-' + Date.now();
+            chat.insertAdjacentHTML('beforeend', `<div class="max-w-4xl mx-auto flex gap-6"><div class="w-12 h-12 rounded-2xl pro-gradient flex items-center justify-center text-white shrink-0"><i data-lucide="bot"></i></div><div id="${aiId}" class="glass p-6 rounded-3xl text-sm">OrionAI думає...</div></div>`);
+            
+            if(imgBase64) { requests--; document.getElementById('req-count').innerText = `${requests}/20`; }
+            clearImg(); input.value = ""; chat.scrollTop = chat.scrollHeight; lucide.createIcons();
+
+            try {
+                const payload = imgBase64 ? {
+                    model: "llama-3.2-11b-vision-preview",
+                    messages: [{ role: "user", content: [{ type: "text", text: text || "Опиши це" }, { type: "image_url", image_url: { url: imgBase64 } }] }]
+                } : {
+                    model: "llama-3.3-70b-versatile",
+                    messages: [{ role: "user", content: text }]
+                };
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                document.getElementById(aiId).innerText = data.choices[0].message.content;
+            } catch { document.getElementById(aiId).innerText = "Помилка API."; }
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        document.getElementById('msg-in').addEventListener('keydown', (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
+        function openTools() { document.getElementById('tools-modal').style.display='flex'; }
+        function closeTools() { document.getElementById('tools-modal').style.display='none'; }
         lucide.createIcons();
     </script>
 </body>
 </html>
-
