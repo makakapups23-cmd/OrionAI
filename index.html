@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -11,47 +11,64 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #e2e8f0; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; overflow: hidden; }
+        
+        /* Теми */
+        body.dark-theme { background-color: #0b0e14; color: #e2e8f0; }
+        body.light-theme { background-color: #f8fafc; color: #1e293b; }
+
         .glass { background: rgba(23, 27, 34, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
-        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 8px; font-size: 14px; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
-        .sidebar-item:hover { background: #1f2937; color: white; }
+        .light-theme .glass { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0,0,0,0.05); }
+
+        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
+        .sidebar-item:hover { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+        
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
         .thinking { animation: pulse 1.5s infinite; font-size: 12px; color: #94a3b8; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .chat-scroll::-webkit-scrollbar { width: 5px; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 10px; }
+
+        /* Модальне вікно налаштувань */
+        #settings-modal { display: none; }
     </style>
 </head>
-<body class="h-screen flex">
+<body class="h-screen flex dark-theme">
 
     <aside class="w-64 glass border-r border-white/5 flex flex-col p-4 z-20">
         <div class="flex items-center gap-3 mb-8 px-2">
             <div class="w-8 h-8 rounded-lg pro-gradient flex items-center justify-center shadow-lg"><i data-lucide="sparkles" class="w-5 h-5 text-white"></i></div>
-            <h1 class="font-bold text-xl tracking-tight text-white">OrionAI</h1>
+            <h1 class="font-bold text-xl tracking-tight">OrionAI</h1>
         </div>
 
         <button onclick="newChat()" class="flex items-center gap-2 w-full bg-white/5 border border-white/10 p-3 rounded-xl hover:bg-white/10 transition mb-6 text-sm font-medium">
-            <i data-lucide="plus" class="w-4 h-4"></i> Новий чат
+            <i data-lucide="plus" class="w-4 h-4"></i> <span id="txt-new-chat">Новий чат</span>
         </button>
 
-        <nav class="flex-1 space-y-6 overflow-y-auto chat-scroll">
-            <div>
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-3 mb-3">Історія чатів</p>
-                <div id="chat-history" class="space-y-1"></div>
+        <nav class="flex-1 space-y-2 overflow-y-auto chat-scroll">
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-3 mb-3" id="txt-history">Історія чатів</p>
+            <div id="chat-history" class="space-y-1"></div>
+            
+            <div class="sidebar-item" onclick="toggleSettings()">
+                <i data-lucide="settings" class="w-4 h-4"></i> <span id="txt-settings">Налаштування</span>
             </div>
         </nav>
 
-        <div class="mt-auto pt-4 border-t border-white/5">
-            <div id="pro-btn" onclick="togglePro()" class="p-3 rounded-xl pro-gradient text-white text-xs font-bold cursor-pointer hover:opacity-90 transition text-center shadow-lg">
-                АКТИВУВАТИ PRO
+        <div class="mt-auto pt-4 border-t border-white/5 space-y-3">
+            <div id="pro-counter" class="text-[10px] text-center text-gray-400 hidden">
+                Залишилося PRO запитів: <span id="requests-left">20</span>
+            </div>
+            <div id="pro-btn" onclick="activatePro()" class="p-3 rounded-xl pro-gradient text-white text-xs font-bold cursor-pointer hover:opacity-90 transition text-center shadow-lg">
+                АКТИВУВАТИ PRO (Безкоштовно)
             </div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative bg-[#0b0e14]">
+    <main class="flex-1 flex flex-col relative">
         <header class="h-16 glass border-b border-white/5 flex justify-between items-center px-6 z-10">
             <div id="status-badge" class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 border border-gray-700 text-[10px] text-gray-400">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Orion v2.5 Online
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Orion v2.5 Online 
+                <span id="badge-pro" class="ml-2 hidden text-purple-400 font-bold tracking-widest">PRO</span>
             </div>
             <div class="flex items-center gap-4">
                 <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-200 transition">УВІЙТИ</button>
@@ -65,8 +82,8 @@
         <div id="chat-display" class="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 chat-scroll">
             <div class="max-w-3xl mx-auto flex gap-4 items-start">
                 <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div>
-                <div class="glass p-5 rounded-2xl rounded-tl-none text-sm text-gray-300 shadow-xl">
-                    Привіт! Я OrionAI. Я оновив систему до стабільної версії. Запитуй будь-що!
+                <div class="glass p-5 rounded-2xl rounded-tl-none text-sm shadow-xl" id="welcome-msg">
+                    Привіт! Я OrionAI. Чим можу допомогти сьогодні?
                 </div>
             </div>
         </div>
@@ -78,18 +95,48 @@
                     <button onclick="document.getElementById('file-input').click()" class="p-3 text-gray-400 hover:text-white transition">
                         <i data-lucide="paperclip" class="w-5 h-5"></i>
                     </button>
-                    <textarea id="msg-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-3 text-sm text-white placeholder-gray-600 resize-none max-h-40" placeholder="Напиши повідомлення..."></textarea>
+                    <textarea id="msg-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 p-3 text-sm placeholder-gray-600 resize-none max-h-40" placeholder="Напиши повідомлення..."></textarea>
                     <button id="send-btn" onclick="handleSend()" class="bg-purple-600 p-3 rounded-xl hover:bg-purple-500 transition text-white shadow-lg">
                         <i data-lucide="send" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <div id="file-preview" class="mt-2 text-[10px] text-purple-400 px-3 hidden">Зображення вибрано</div>
             </div>
         </footer>
     </main>
 
+    <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="glass p-8 rounded-3xl w-96 border border-white/10 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold" id="txt-modal-title">Налаштування</h2>
+                <button onclick="toggleSettings()" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="text-xs text-gray-500 block mb-2" id="txt-theme-label">ТЕМА ОФОРМЛЕННЯ</label>
+                    <select onchange="changeTheme(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm outline-none">
+                        <option value="dark" class="bg-gray-900">Темна</option>
+                        <option value="light" class="bg-gray-900">Світла</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-2" id="txt-lang-label">МОВА ІНТЕРФЕЙСУ</label>
+                    <select onchange="changeLang(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm outline-none">
+                        <option value="uk" class="bg-gray-900">Українська</option>
+                        <option value="en" class="bg-gray-900">English</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 1. Firebase (Твої дані)
+        // --- ПЕРЕМІННІ СТАНУ ---
+        let isPro = false;
+        let proRequests = 20;
+        let currentLang = 'uk';
+
+        // --- FIREBASE ТА API ---
         const firebaseConfig = {
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
             authDomain: "orionai-92335.firebaseapp.com",
@@ -97,22 +144,69 @@
             appId: "1:683751684702:web:f51ec5465f5eb6727452cf"
         };
         firebase.initializeApp(firebaseConfig);
+        const GEMINI_API_KEY = "AIzaSyBQSNv8s_EncCR7VW0rNCnW2IW-llBum-U";
         lucide.createIcons();
 
-        // 2. API KEY (ЗАМІНИ НА НОВИЙ З НОВОГО ПРОЄКТУ!)
-        const GEMINI_API_KEY = "AIzaSyBQSNv8s_EncCR7VW0rNCnW2IW-llBum-U";
-
-        // Допоміжна функція для фото
-        async function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = e => reject(e);
-            });
+        // --- ЛОГІКА PRO ПІДПИСКИ ---
+        function activatePro() {
+            isPro = true;
+            proRequests = 20;
+            document.getElementById('pro-btn').innerHTML = "PRO АКТИВОВАНО ✨";
+            document.getElementById('pro-btn').classList.remove('pro-gradient');
+            document.getElementById('pro-btn').classList.add('bg-green-600');
+            document.getElementById('pro-counter').classList.remove('hidden');
+            document.getElementById('badge-pro').classList.remove('hidden');
+            document.getElementById('requests-left').innerText = proRequests;
+            alert("Ви активували PRO режим! Тепер у вас є 20 інтелектуальних запитів.");
         }
 
+        // --- НАЛАШТУВАННЯ ---
+        function toggleSettings() {
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function changeTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.replace('dark-theme', 'light-theme');
+            } else {
+                document.body.classList.replace('light-theme', 'dark-theme');
+            }
+        }
+
+        const translations = {
+            uk: {
+                newChat: "Новий чат", history: "Історія чатів", settings: "Налаштування",
+                modalTitle: "Налаштування", theme: "ТЕМА ОФОРМЛЕННЯ", lang: "МОВА ІНТЕРФЕЙСУ",
+                welcome: "Привіт! Я OrionAI. Чим можу допомогти сьогодні?", input: "Напиши повідомлення..."
+            },
+            en: {
+                newChat: "New Chat", history: "Chat History", settings: "Settings",
+                modalTitle: "Settings", theme: "APPEARANCE THEME", lang: "INTERFACE LANGUAGE",
+                welcome: "Hello! I am OrionAI. How can I help you today?", input: "Type a message..."
+            }
+        };
+
+        function changeLang(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.getElementById('txt-new-chat').innerText = t.newChat;
+            document.getElementById('txt-history').innerText = t.history;
+            document.getElementById('txt-settings').innerText = t.settings;
+            document.getElementById('txt-modal-title').innerText = t.modalTitle;
+            document.getElementById('txt-theme-label').innerText = t.theme;
+            document.getElementById('txt-lang-label').innerText = t.lang;
+            document.getElementById('welcome-msg').innerText = t.welcome;
+            document.getElementById('msg-input').placeholder = t.input;
+        }
+
+        // --- ВІДПРАВКА ПОВІДОМЛЕНЬ ---
         async function handleSend() {
+            if (isPro && proRequests <= 0) {
+                alert("Ваші PRO запити закінчилися. Використовуйте звичайний режим.");
+                return;
+            }
+
             const input = document.getElementById('msg-input');
             const fileInput = document.getElementById('file-input');
             const chat = document.getElementById('chat-display');
@@ -121,25 +215,31 @@
 
             if (!val && !file) return;
 
-            // Користувач
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%]">${val || "Зображення"}</div></div>`);
+            // Зменшуємо ліміт PRO
+            if (isPro) {
+                proRequests--;
+                document.getElementById('requests-left').innerText = proRequests;
+            }
+
+            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white">${val || "Зображення"}</div></div>`);
             
             const aiId = 'ai-' + Date.now();
-            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm text-gray-300 shadow-xl"><div class="thinking">OrionAI відповідає...</div></div></div>`);
-            
+            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">OrionAI відповідає...</div></div></div>`);
+            lucide.createIcons();
+
             input.value = "";
             fileInput.value = "";
-            document.getElementById('file-preview').classList.add('hidden');
             chat.scrollTop = chat.scrollHeight;
 
             try {
-                let parts = [{ text: val || "Що на цьому фото?" }];
+                let parts = [{ text: val || "Describe this image" }];
                 if (file) {
-                    const base64Data = await fileToBase64(file);
+                    const reader = new FileReader();
+                    const base64Promise = new Promise(r => { reader.onload = () => r(reader.result.split(',')[1]); reader.readAsDataURL(file); });
+                    const base64Data = await base64Promise;
                     parts.push({ inline_data: { mime_type: file.type, data: base64Data } });
                 }
 
-                // ВИКОРИСТОВУЄМО СТАБІЛЬНУ ВЕРСІЮ v1 ТА МОДЕЛЬ FLASH
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -147,34 +247,28 @@
                 });
 
                 const data = await response.json();
-                
-                if (data.error) throw new Error(data.error.message);
-
                 const aiText = data.candidates[0].content.parts[0].text;
                 document.getElementById(aiId).innerText = aiText;
-
             } catch (error) {
-                document.getElementById(aiId).innerHTML = `<span class="text-red-400">Помилка: ${error.message}</span><br><br><small>Переконайся, що ключ створено в НОВОМУ проєкті.</small>`;
+                document.getElementById(aiId).innerHTML = `<span class="text-red-400">Помилка підключення</span>`;
             }
             chat.scrollTop = chat.scrollHeight;
         }
 
-        // Авторизація
+        // --- АВТОРИЗАЦІЯ ---
         async function handleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            const result = await firebase.auth().signInWithPopup(provider);
-            document.getElementById('login-btn').classList.add('hidden');
-            document.getElementById('user-ui').classList.remove('hidden');
-            document.getElementById('user-ui').classList.add('flex');
-            document.getElementById('user-name').innerText = result.user.displayName;
-            document.getElementById('user-pic').src = result.user.photoURL;
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await firebase.auth().signInWithPopup(provider);
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('user-ui').classList.remove('hidden');
+                document.getElementById('user-ui').classList.add('flex');
+                document.getElementById('user-name').innerText = result.user.displayName;
+                document.getElementById('user-pic').src = result.user.photoURL;
+            } catch (e) { console.error(e); }
         }
 
         function newChat() { document.getElementById('chat-display').innerHTML = ""; }
-        
-        document.getElementById('file-input').onchange = function() {
-            if(this.files[0]) document.getElementById('file-preview').classList.remove('hidden');
-        };
 
         document.getElementById('msg-input').addEventListener('keypress', e => { 
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } 
@@ -182,4 +276,3 @@
     </script>
 </body>
 </html>
-
