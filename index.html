@@ -10,14 +10,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #e2e8f0; overflow: hidden; height: 100vh; transition: 0.3s; }
-        .light-theme { background-color: #f1f5f9; color: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #e2e8f0; overflow: hidden; height: 100vh; display: flex; }
+        
+        /* Sidebar logic */
+        #sidebar { width: 280px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0; z-index: 50; }
+        .sidebar-hidden #sidebar { width: 0; margin-left: -280px; opacity: 0; visibility: hidden; }
+        
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
         .glass { background: rgba(23, 27, 34, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08); }
-        .light-theme .glass { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.1); }
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
         .avatar-glow { padding: 2px; background: linear-gradient(45deg, #6366f1, #a855f7); border-radius: 50%; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
-        #sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); width: 280px; }
-        .sidebar-hidden #sidebar { margin-left: -280px; width: 0; opacity: 0; pointer-events: none; }
+        
         .modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); }
         .chat-scroll::-webkit-scrollbar { width: 4px; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -25,9 +29,9 @@
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     </style>
 </head>
-<body class="flex dark-theme">
+<body class="dark-theme">
 
-    <aside id="sidebar" class="glass border-r flex flex-col p-6 shrink-0 relative z-20">
+    <aside id="sidebar" class="glass border-r flex flex-col p-6 h-full">
         <div class="flex items-center gap-3 mb-10">
             <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center text-white font-black italic shadow-lg">O</div>
             <h1 class="font-black text-2xl tracking-tighter">OrionAI</h1>
@@ -49,11 +53,11 @@
 
         <div class="mt-auto pt-6 border-t border-white/5">
             <div id="limit-info" class="hidden mb-4 px-2">
-                <div class="flex justify-between text-[10px] font-black text-purple-400 mb-1 tracking-widest uppercase">
+                <div class="flex justify-between text-[10px] font-black text-purple-400 mb-1 uppercase tracking-widest">
                     PRO: <span id="req-count">20/20</span>
                 </div>
                 <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div id="req-bar" class="h-full pro-gradient transition-all duration-500" style="width: 100%"></div>
+                    <div id="req-bar" class="h-full pro-gradient" style="width: 100%"></div>
                 </div>
             </div>
             <button id="pro-btn" onclick="handleProClick()" class="w-full p-4 rounded-2xl pro-gradient text-white text-[11px] font-black shadow-2xl hover:scale-[1.02] transition uppercase tracking-widest">
@@ -62,10 +66,10 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0">
-        <header class="h-20 glass border-b flex justify-between items-center px-8 shrink-0 z-10">
+    <div class="main-content">
+        <header class="h-20 glass border-b flex justify-between items-center px-8 shrink-0">
             <div class="flex items-center gap-6">
-                <button onclick="document.body.classList.toggle('sidebar-hidden')" class="p-2.5 hover:bg-white/10 rounded-xl text-gray-400 transition active:scale-90">
+                <button onclick="document.body.classList.toggle('sidebar-hidden')" class="p-2.5 hover:bg-white/10 rounded-xl text-gray-400 transition">
                     <i data-lucide="menu"></i>
                 </button>
                 <div class="flex items-center gap-3 px-4 py-2 rounded-2xl bg-black/20 border border-white/5 shadow-inner">
@@ -75,7 +79,7 @@
             </div>
 
             <div id="auth-section">
-                <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-6 py-2.5 rounded-2xl text-xs font-black shadow-xl hover:bg-gray-200 transition">УВІЙТИ</button>
+                <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-6 py-2.5 rounded-2xl text-xs font-black shadow-xl">УВІЙТИ</button>
                 <div id="user-ui" class="hidden items-center gap-4">
                     <div class="text-right">
                         <p id="user-name" class="text-xs font-black"></p>
@@ -108,7 +112,7 @@
                 </div>
             </div>
         </footer>
-    </main>
+    </div>
 
     <div id="settings-modal" class="modal" onclick="if(event.target==this)toggleSettings()">
         <div class="glass p-10 rounded-[40px] w-full max-w-sm border border-white/10 mx-4">
@@ -121,16 +125,8 @@
                 <div>
                     <label id="txt-lang-label" class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-4">МОВА СИСТЕМИ</label>
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="setLang('uk')" class="flex items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500 transition font-bold text-sm">🇺🇦 Українська</button>
-                        <button onclick="setLang('en')" class="flex items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-purple-500 transition font-bold text-sm">🇺🇸 English</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label id="txt-theme-label" class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-4">ТЕМАТИКА</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="setTheme('dark')" class="p-4 rounded-2xl bg-black/40 border border-white/5 font-bold text-xs uppercase tracking-tighter">Dark</button>
-                        <button onclick="setTheme('light')" class="p-4 rounded-2xl bg-white text-black font-bold text-xs uppercase tracking-tighter shadow-lg">Light</button>
+                        <button onclick="setLang('uk')" class="flex items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition font-bold text-sm">🇺🇦 UA</button>
+                        <button onclick="setLang('en')" class="flex items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition font-bold text-sm">🇺🇸 EN</button>
                     </div>
                 </div>
             </div>
@@ -140,16 +136,18 @@
     <div id="tools-modal" class="modal" onclick="if(event.target==this)closeTools()">
         <div class="glass p-10 rounded-[40px] w-full max-w-lg border border-white/10 mx-4">
             <h2 id="txt-tools-title" class="text-2xl font-black mb-8">Генератор Фото</h2>
-            <input id="prompt-in" type="text" placeholder="Що намалювати? (English works best)" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none mb-4 text-white font-medium">
-            <button onclick="genImg()" id="gen-btn" class="w-full p-4 pro-gradient rounded-2xl font-black text-white shadow-xl hover:scale-[1.02] transition">ЗГЕНЕРУВАТИ</button>
-            <div id="gen-wrap" class="hidden mt-8">
-                <img id="gen-res" class="w-full rounded-2xl border border-white/10 shadow-2xl">
+            <input id="prompt-in" type="text" placeholder="Що намалювати? (English)" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none mb-4 text-white">
+            <button onclick="genImg()" id="gen-btn" class="w-full p-4 pro-gradient rounded-2xl font-black text-white shadow-xl">ЗГЕНЕРУВАТИ</button>
+            <div id="gen-wrap" class="hidden mt-8 text-center">
+                <img id="gen-res" class="w-full rounded-2xl border border-white/10 shadow-2xl mb-4">
+                <a id="download-btn" href="#" download="orion_art.jpg" class="text-xs font-bold text-purple-400 uppercase tracking-widest">Завантажити фото</a>
             </div>
         </div>
     </div>
 
     <script>
-        const API_KEY = "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"; // ЗАМІНИ НА СВІЙ
+        // ВСТАВ СВІЙ КЛЮЧ GROQ ТУТ
+        const API_KEY = "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"; 
 
         firebase.initializeApp({
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
@@ -165,12 +163,14 @@
             uk: {
                 newChat: "Новий чат", tools: "Інструменти", settings: "Налаштування", 
                 proBtn: "АКТИВУВАТИ PRO", welcome: "Привіт! Я OrionAI. Я бачу фото (у PRO) та вмію малювати. Чим допоможу?",
-                setT: "Налаштування", langL: "МОВА СИСТЕМИ", themeL: "ТЕМАТИКА", toolsT: "Генератор Фото"
+                setT: "Налаштування", langL: "МОВА СИСТЕМИ", toolsT: "Генератор Фото", genBtn: "ЗГЕНЕРУВАТИ",
+                placeholder: "Запитай щось..."
             },
             en: {
                 newChat: "New Chat", tools: "Tools", settings: "Settings", 
                 proBtn: "ACTIVATE PRO", welcome: "Hello! I'm OrionAI. I can see photos (in PRO) and I can draw. How can I help?",
-                setT: "Settings", langL: "SYSTEM LANGUAGE", themeL: "THEME", toolsT: "Image Generator"
+                setT: "Settings", langL: "SYSTEM LANGUAGE", toolsT: "Image Generator", genBtn: "GENERATE",
+                placeholder: "Ask something..."
             }
         };
 
@@ -184,8 +184,9 @@
             document.getElementById('welcome-text').innerText = t.welcome;
             document.getElementById('txt-settings-title').innerText = t.setT;
             document.getElementById('txt-lang-label').innerText = t.langL;
-            document.getElementById('txt-theme-label').innerText = t.themeL;
             document.getElementById('txt-tools-title').innerText = t.toolsT;
+            document.getElementById('gen-btn').innerText = t.genBtn;
+            document.getElementById('msg-in').placeholder = t.placeholder;
             toggleSettings();
         }
 
@@ -201,7 +202,7 @@
         }
 
         function newChat() {
-            document.getElementById('chat-box').innerHTML = `<div class="max-w-4xl mx-auto flex gap-6"><div class="w-12 h-12 rounded-2xl pro-gradient flex items-center justify-center text-white shrink-0 shadow-lg"><i data-lucide="bot"></i></div><div class="glass p-6 rounded-3xl text-sm border-white/10 shadow-xl max-w-[80%]">${translations[currentLang].welcome}</div></div>`;
+            document.getElementById('chat-box').innerHTML = `<div class="max-w-4xl mx-auto flex gap-6"><div class="w-12 h-12 rounded-2xl pro-gradient flex items-center justify-center text-white shrink-0 shadow-lg"><i data-lucide="bot"></i></div><div class="glass p-6 rounded-3xl text-sm border-white/10 shadow-xl max-w-[80%] text-white">${translations[currentLang].welcome}</div></div>`;
             lucide.createIcons();
         }
 
@@ -210,17 +211,12 @@
             m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        function setTheme(t) {
-            document.body.className = `flex ${t}-theme`;
-            toggleSettings();
-        }
-
         function handleProClick() {
             if(!user) { handleLogin(); return; }
             pro = true;
             document.getElementById('pro-btn').innerText = (currentLang === 'uk' ? "PRO АКТИВНО ✨" : "PRO ACTIVE ✨");
             document.getElementById('limit-info').classList.remove('hidden');
-            document.getElementById('acc-type').innerText = (currentLang === 'uk' ? "PRO ACCOUNT" : "PRO ACCOUNT");
+            document.getElementById('acc-type').innerText = "PRO ACCOUNT";
             document.getElementById('ver-badge').innerText = "v3.9 PRO";
         }
 
@@ -231,8 +227,9 @@
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=1024&height=1024&nologo=true`;
             const img = document.getElementById('gen-res');
             img.src = url;
+            document.getElementById('download-btn').href = url;
             document.getElementById('gen-wrap').classList.remove('hidden');
-            img.onload = () => btn.innerText = (currentLang === 'uk' ? "ЗГЕНЕРУВАТИ" : "GENERATE");
+            img.onload = () => btn.innerText = translations[currentLang].genBtn;
         }
 
         function previewImg(input) {
@@ -276,7 +273,7 @@
                         messages: [{
                             role: "user",
                             content: [
-                                { type: "text", text: text || "Describe this photo" },
+                                { type: "text", text: text || "Describe this image" },
                                 { type: "image_url", image_url: { url: currentImg } }
                             ]
                         }]
@@ -296,7 +293,7 @@
 
                 const data = await res.json();
                 document.getElementById(aiId).innerText = data.choices[0].message.content;
-            } catch { document.getElementById(aiId).innerText = "API Error."; }
+            } catch { document.getElementById(aiId).innerText = "API Error. Check Key."; }
             chat.scrollTop = chat.scrollHeight;
         }
 
