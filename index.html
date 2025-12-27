@@ -14,8 +14,14 @@
         body { font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; overflow: hidden; }
         body.dark-theme { background-color: #0b0e14; color: #e2e8f0; }
         body.light-theme { background-color: #f8fafc; color: #1e293b; }
+        
         .glass { background: rgba(23, 27, 34, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
         .light-theme .glass { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0,0,0,0.05); }
+        
+        /* Анімація бокового меню */
+        #sidebar { transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; }
+        .sidebar-hidden #sidebar { transform: translateX(-100%); width: 0; padding: 0; margin: 0; overflow: hidden; border: none; }
+        
         .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
         .sidebar-item:hover { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
@@ -28,7 +34,7 @@
 </head>
 <body class="h-screen flex dark-theme">
 
-    <aside class="w-64 glass border-r border-white/5 flex flex-col p-4 z-20">
+    <aside id="sidebar" class="w-64 glass border-r border-white/5 flex flex-col p-4 z-20 shrink-0">
         <div class="flex items-center gap-3 mb-8 px-2">
             <div class="w-8 h-8 rounded-lg pro-gradient flex items-center justify-center shadow-lg"><i data-lucide="sparkles" class="w-5 h-5 text-white"></i></div>
             <h1 class="font-bold text-xl tracking-tight">OrionAI</h1>
@@ -60,11 +66,16 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative">
+    <main class="flex-1 flex flex-col relative min-w-0 transition-all duration-300">
         <header class="h-16 glass border-b border-white/5 flex justify-between items-center px-6 z-10">
-            <div id="status-badge" class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 border border-gray-700 text-[10px] text-gray-400">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Orion v2.5 Online 
-                <span id="badge-pro" class="ml-2 hidden text-purple-400 font-bold tracking-widest">PRO</span>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <div id="status-badge" class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/50 border border-gray-700 text-[10px] text-gray-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Orion v2.5 Online 
+                    <span id="badge-pro" class="ml-2 hidden text-purple-400 font-bold tracking-widest">PRO</span>
+                </div>
             </div>
             <div class="flex items-center gap-4">
                 <button id="login-btn" onclick="handleLogin()" class="bg-white text-black px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-200 transition">УВІЙТИ</button>
@@ -110,15 +121,15 @@
                 <div>
                     <label class="text-xs text-gray-500 block mb-2" id="txt-theme-label">ТЕМА ОФОРМЛЕННЯ</label>
                     <select onchange="changeTheme(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none">
-                        <option value="dark" class="bg-gray-900">Темна</option>
-                        <option value="light" class="bg-gray-900">Світла</option>
+                        <option value="dark" class="bg-gray-900 text-white">Темна</option>
+                        <option value="light" class="bg-gray-900 text-white">Світла</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-2" id="txt-lang-label">МОВА ІНТЕРФЕЙСУ</label>
                     <select onchange="changeLang(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none">
-                        <option value="uk" class="bg-gray-900">Українська</option>
-                        <option value="en" class="bg-gray-900">English</option>
+                        <option value="uk" class="bg-gray-900 text-white">Українська</option>
+                        <option value="en" class="bg-gray-900 text-white">English</option>
                     </select>
                 </div>
             </div>
@@ -130,7 +141,7 @@
         let proRequests = 20;
         let cooldownActive = false;
         let currentLang = 'uk';
-        let currentUser = null; // Змінна для відстеження входу
+        let currentUser = null;
 
         const firebaseConfig = {
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
@@ -141,6 +152,11 @@
         firebase.initializeApp(firebaseConfig);
         const GEMINI_API_KEY = "AIzaSyBQSNv8s_EncCR7VW0rNCnW2IW-llBum-U";
         lucide.createIcons();
+
+        // ФУНКЦІЯ ПРИХОВУВАННЯ МЕНЮ
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-hidden');
+        }
 
         const translations = {
             uk: {
@@ -197,7 +213,7 @@
             }
 
             const chat = document.getElementById('chat-display');
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white">${val}</div></div>`);
+            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white shadow-lg">${val}</div></div>`);
             
             const aiId = 'ai-' + Date.now();
             chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">${translations[currentLang].thinking}</div></div></div>`);
@@ -226,17 +242,13 @@
             chat.scrollTop = chat.scrollHeight;
         }
 
-        // --- ПЕРЕВІРКА ВХОДУ ПЕРЕД PRO ---
         function activatePro() {
             if (cooldownActive) return;
-            
-            // ПЕРЕВІРКА: чи є користувач?
             if (!currentUser) {
                 alert(translations[currentLang].authError);
-                handleLogin(); // Автоматично відкриваємо вікно входу
+                handleLogin();
                 return;
             }
-
             isPro = true;
             proRequests = 20;
             document.getElementById('pro-btn').innerText = translations[currentLang].proActive;
@@ -255,14 +267,8 @@
             const t = setInterval(() => {
                 sec--;
                 let h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-                document.getElementById('countdown').innerText = 
-                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                if (sec <= 0) { 
-                    clearInterval(t); 
-                    cooldownActive = false; 
-                    document.getElementById('pro-btn').classList.remove('hidden');
-                    document.getElementById('timer-display').classList.add('hidden');
-                }
+                document.getElementById('countdown').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                if (sec <= 0) { clearInterval(t); cooldownActive = false; document.getElementById('pro-btn').classList.remove('hidden'); document.getElementById('timer-display').classList.add('hidden'); }
             }, 1000);
         }
 
@@ -271,18 +277,16 @@
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
         function changeTheme(t) { document.body.className = `h-screen flex ${t}-theme`; }
-        
         function handleLogin() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider).then(res => {
-                currentUser = res.user; // Зберігаємо дані користувача
+                currentUser = res.user;
                 document.getElementById('login-btn').classList.add('hidden');
                 document.getElementById('user-ui').classList.replace('hidden', 'flex');
                 document.getElementById('user-name').innerText = res.user.displayName;
                 document.getElementById('user-pic').src = res.user.photoURL;
             }).catch(err => console.log("Login cancelled"));
         }
-        
         function newChat() { document.getElementById('chat-display').innerHTML = ""; }
     </script>
 </body>
