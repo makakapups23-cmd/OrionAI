@@ -101,7 +101,7 @@
     </main>
 
     <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="glass p-8 rounded-3xl w-96 border border-white/10 shadow-2xl">
+        <div class="glass p-8 rounded-3xl w-96 border border-white/10 shadow-2xl text-white">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold" id="txt-modal-title">Налаштування</h2>
                 <button onclick="toggleSettings()" class="text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
@@ -109,14 +109,14 @@
             <div class="space-y-6">
                 <div>
                     <label class="text-xs text-gray-500 block mb-2" id="txt-theme-label">ТЕМА ОФОРМЛЕННЯ</label>
-                    <select onchange="changeTheme(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
+                    <select onchange="changeTheme(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none">
                         <option value="dark" class="bg-gray-900">Темна</option>
                         <option value="light" class="bg-gray-900">Світла</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-2" id="txt-lang-label">МОВА ІНТЕРФЕЙСУ</label>
-                    <select onchange="changeLang(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
+                    <select onchange="changeLang(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none">
                         <option value="uk" class="bg-gray-900">Українська</option>
                         <option value="en" class="bg-gray-900">English</option>
                     </select>
@@ -130,6 +130,7 @@
         let proRequests = 20;
         let cooldownActive = false;
         let currentLang = 'uk';
+        let currentUser = null; // Змінна для відстеження входу
 
         const firebaseConfig = {
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
@@ -147,14 +148,16 @@
                 proBtn: "АКТИВУВАТИ PRO", proActive: "PRO АКТИВНО ✨", proLeft: "Запитів до відновлення",
                 resetIn: "Відновлення через", welcome: "Привіт! Я OrionAI. Чим можу допомогти сьогодні?",
                 input: "Напиши повідомлення...", modalTitle: "Налаштування", theme: "ТЕМА ОФОРМЛЕННЯ",
-                lang: "МОВА ІНТЕРФЕЙСУ", thinking: "OrionAI думає...", login: "УВІЙТИ"
+                lang: "МОВА ІНТЕРФЕЙСУ", thinking: "OrionAI думає...", login: "УВІЙТИ",
+                authError: "Будь ласка, увійдіть в акаунт, щоб активувати PRO статус!"
             },
             en: {
                 newChat: "New Chat", history: "Chat History", settings: "Settings",
                 proBtn: "ACTIVATE PRO", proActive: "PRO ACTIVE ✨", proLeft: "Requests until reset",
                 resetIn: "Reset in", welcome: "Hello! I'm OrionAI. How can I help you today?",
                 input: "Type a message...", modalTitle: "Settings", theme: "APPEARANCE THEME",
-                lang: "INTERFACE LANGUAGE", thinking: "OrionAI is thinking...", login: "LOGIN"
+                lang: "INTERFACE LANGUAGE", thinking: "OrionAI is thinking...", login: "LOGIN",
+                authError: "Please log in to your account to activate PRO status!"
             }
         };
 
@@ -223,13 +226,22 @@
             chat.scrollTop = chat.scrollHeight;
         }
 
+        // --- ПЕРЕВІРКА ВХОДУ ПЕРЕД PRO ---
         function activatePro() {
             if (cooldownActive) return;
+            
+            // ПЕРЕВІРКА: чи є користувач?
+            if (!currentUser) {
+                alert(translations[currentLang].authError);
+                handleLogin(); // Автоматично відкриваємо вікно входу
+                return;
+            }
+
             isPro = true;
             proRequests = 20;
             document.getElementById('pro-btn').innerText = translations[currentLang].proActive;
             document.getElementById('pro-counter').classList.remove('hidden');
-            document.getElementById('badge-pro').classList.remove('hidden'); // Показуємо плашку
+            document.getElementById('badge-pro').classList.remove('hidden');
             document.getElementById('requests-left').innerText = proRequests;
         }
 
@@ -237,7 +249,7 @@
             isPro = false;
             cooldownActive = true;
             document.getElementById('pro-btn').classList.add('hidden');
-            document.getElementById('badge-pro').classList.add('hidden'); // ХОВАЄМО плашку, коли PRO скінчилось
+            document.getElementById('badge-pro').classList.add('hidden');
             document.getElementById('timer-display').classList.remove('hidden');
             let sec = 24 * 60 * 60;
             const t = setInterval(() => {
@@ -259,15 +271,18 @@
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
         function changeTheme(t) { document.body.className = `h-screen flex ${t}-theme`; }
+        
         function handleLogin() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider).then(res => {
+                currentUser = res.user; // Зберігаємо дані користувача
                 document.getElementById('login-btn').classList.add('hidden');
                 document.getElementById('user-ui').classList.replace('hidden', 'flex');
                 document.getElementById('user-name').innerText = res.user.displayName;
                 document.getElementById('user-pic').src = res.user.photoURL;
-            });
+            }).catch(err => console.log("Login cancelled"));
         }
+        
         function newChat() { document.getElementById('chat-display').innerHTML = ""; }
     </script>
 </body>
