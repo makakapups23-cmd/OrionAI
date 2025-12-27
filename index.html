@@ -103,10 +103,9 @@
         // 2. ВСТАВ СЮДИ СВІЙ GEMINI API КЛЮЧ (який ти скопіював у Google Studio)
         const GEMINI_API_KEY = AIzaSyAuxmNrYNt1s402hwjpIw6feAkcTjOKTkA
         // Ініціалізація
-        if (firebaseConfig.apiKey !== "ВСТАВ_СЮДИ_API_KEY") {
-            firebase.initializeApp(firebaseConfig);
-        }
-        lucide.createIcons();
+       // Ініціалізація Firebase без зайвих перевірок
+firebase.initializeApp(firebaseConfig);
+lucide.createIcons();
 
         // Функція входу Google
         async function handleLogin() {
