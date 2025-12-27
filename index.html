@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+              <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -72,7 +72,7 @@
             <div class="max-w-3xl mx-auto flex gap-4 items-start">
                 <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div>
                 <div class="glass p-5 rounded-2xl rounded-tl-none text-sm text-gray-300 shadow-xl">
-                    Привіт! Я OrionAI. Я готовий допомагати тобі з текстом та зображеннями. Запитуй!
+                    Привіт! Я OrionAI. Я отримав новий ключ та готовий до роботи. Що хочеш дізнатися?
                 </div>
             </div>
         </div>
@@ -97,7 +97,7 @@
     </main>
 
     <script>
-        // 1. Конфігурація Firebase
+        // 1. Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
             authDomain: "orionai-92335.firebaseapp.com",
@@ -108,12 +108,13 @@
             measurementId: "G-G0J8VBMEPJ"
         };
 
-        // 2. Ключ Gemini (ЗАМІНИ НА НОВИЙ!)
+        // 2. Gemini API Key - ВСТАВ СЮДИ НОВИЙ КЛЮЧ З НОВОГО ПРОЄКТУ!
         const GEMINI_API_KEY = "AIzaSyD89jI6pZXatckf1_wpvslhWNTAPFLiZgI";
 
         firebase.initializeApp(firebaseConfig);
         lucide.createIcons();
 
+        // Прев'ю файлу
         document.getElementById('file-input').onchange = function() {
             if(this.files[0]) document.getElementById('file-preview').classList.remove('hidden');
         };
@@ -152,10 +153,27 @@
 
             if (!val && !file) return;
 
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl rounded-tr-none shadow-lg text-sm max-w-[85%]">${val || "Зображення"}</div></div>`);
+            // Користувач
+            chat.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-end max-w-3xl mx-auto">
+                    <div class="bg-purple-600 p-4 rounded-2xl rounded-tr-none shadow-lg text-sm max-w-[85%]">
+                        ${val || "Надіслано зображення"}
+                    </div>
+                </div>
+            `);
             
             const aiId = 'ai-' + Date.now();
-            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl rounded-tl-none text-sm text-gray-300 shadow-xl"><div class="thinking">OrionAI міркує...</div></div></div>`);
+            // Скелетон відповіді
+            chat.insertAdjacentHTML('beforeend', `
+                <div class="max-w-3xl mx-auto flex gap-4 items-start">
+                    <div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl">
+                        <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div id="${aiId}" class="glass p-5 rounded-2xl rounded-tl-none text-sm text-gray-300 shadow-xl">
+                        <div class="thinking">OrionAI міркує...</div>
+                    </div>
+                </div>
+            `);
             
             input.value = "";
             fileInput.value = "";
@@ -173,16 +191,11 @@
                     });
                 }
 
-                // ВИПРАВЛЕНО: Використовуємо 'gemini-1.5-flash-latest' для стабільності
-                // ПОВНІСТЮ ЗАМІНИ ЦЕЙ БЛОК:
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                // Використовуємо v1beta та gemini-1.5-flash (найкраще для безкоштовних ключів)
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        contents: [{ 
-                            parts: parts 
-                        }] 
-                    })
+                    body: JSON.stringify({ contents: [{ parts: parts }] })
                 });
 
                 const data = await response.json();
@@ -195,7 +208,7 @@
                 document.getElementById(aiId).innerText = aiResponse;
 
             } catch (error) {
-                document.getElementById(aiId).innerText = "Помилка OrionAI: " + error.message;
+                document.getElementById(aiId).innerHTML = `<span class="text-red-400">Помилка: ${error.message}</span><br><br><small class="text-gray-500">Перевір, чи створив ти ключ у НОВОМУ ПРОЄКТІ в Google AI Studio.</small>`;
             }
             
             chat.scrollTop = chat.scrollHeight;
@@ -225,6 +238,3 @@
     </script>
 </body>
 </html>
-
-
-
