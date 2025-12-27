@@ -12,22 +12,17 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; overflow: hidden; }
-        
         body.dark-theme { background-color: #0b0e14; color: #e2e8f0; }
         body.light-theme { background-color: #f8fafc; color: #1e293b; }
-
         .glass { background: rgba(23, 27, 34, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
         .light-theme .glass { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0,0,0,0.05); }
-
         .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
         .sidebar-item:hover { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-        
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
         .thinking { animation: pulse 1.5s infinite; font-size: 12px; color: #94a3b8; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .chat-scroll::-webkit-scrollbar { width: 5px; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 10px; }
-
         #settings-modal { display: none; }
     </style>
 </head>
@@ -54,10 +49,10 @@
 
         <div class="mt-auto pt-4 border-t border-white/5 space-y-3">
             <div id="pro-counter" class="text-[10px] text-center text-gray-400 hidden">
-                Запитів до відновлення: <span id="requests-left">20</span>
+                <span id="txt-pro-left">Запитів до відновлення</span>: <span id="requests-left">20</span>
             </div>
             <div id="timer-display" class="text-[11px] text-center text-red-400 font-bold hidden">
-                Відновлення через: <span id="countdown">24:00:00</span>
+                <span id="txt-reset-in">Відновлення через</span>: <span id="countdown">24:00:00</span>
             </div>
             <div id="pro-btn" onclick="activatePro()" class="p-3 rounded-xl pro-gradient text-white text-xs font-bold cursor-pointer hover:opacity-90 transition text-center shadow-lg">
                 АКТИВУВАТИ PRO
@@ -114,16 +109,16 @@
             <div class="space-y-6">
                 <div>
                     <label class="text-xs text-gray-500 block mb-2" id="txt-theme-label">ТЕМА ОФОРМЛЕННЯ</label>
-                    <select onchange="changeTheme(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm outline-none">
-                        <option value="dark">Темна</option>
-                        <option value="light">Світла</option>
+                    <select onchange="changeTheme(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
+                        <option value="dark" class="bg-gray-900">Темна</option>
+                        <option value="light" class="bg-gray-900">Світла</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-2" id="txt-lang-label">МОВА ІНТЕРФЕЙСУ</label>
-                    <select onchange="changeLang(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm outline-none">
-                        <option value="uk">Українська</option>
-                        <option value="en">English</option>
+                    <select onchange="changeLang(this.value)" class="w-full bg-white/10 border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
+                        <option value="uk" class="bg-gray-900">Українська</option>
+                        <option value="en" class="bg-gray-900">English</option>
                     </select>
                 </div>
             </div>
@@ -131,10 +126,10 @@
     </div>
 
     <script>
-        // --- СТАН ТА ТАЙМЕР ---
         let isPro = false;
         let proRequests = 20;
         let cooldownActive = false;
+        let currentLang = 'uk';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
@@ -146,44 +141,48 @@
         const GEMINI_API_KEY = "AIzaSyBQSNv8s_EncCR7VW0rNCnW2IW-llBum-U";
         lucide.createIcons();
 
-        function activatePro() {
-            if (cooldownActive) return;
-            isPro = true;
-            proRequests = 20;
-            updateProUI();
-            alert("PRO активовано! У вас є 20 запитів на 24 години.");
+        // --- ПЕРЕКЛАД ---
+        const translations = {
+            uk: {
+                newChat: "Новий чат", history: "Історія чатів", settings: "Налаштування",
+                proBtn: "АКТИВУВАТИ PRO", proActive: "PRO АКТИВНО ✨", proLeft: "Запитів до відновлення",
+                resetIn: "Відновлення через", welcome: "Привіт! Я OrionAI. Чим можу допомогти сьогодні?",
+                input: "Напиши повідомлення...", modalTitle: "Налаштування", theme: "ТЕМА ОФОРМЛЕННЯ",
+                lang: "МОВА ІНТЕРФЕЙСУ", thinking: "OrionAI думає...", login: "УВІЙТИ"
+            },
+            en: {
+                newChat: "New Chat", history: "Chat History", settings: "Settings",
+                proBtn: "ACTIVATE PRO", proActive: "PRO ACTIVE ✨", proLeft: "Requests until reset",
+                resetIn: "Reset in", welcome: "Hello! I'm OrionAI. How can I help you today?",
+                input: "Type a message...", modalTitle: "Settings", theme: "APPEARANCE THEME",
+                lang: "INTERFACE LANGUAGE", thinking: "OrionAI is thinking...", login: "LOGIN"
+            }
+        };
+
+        function changeLang(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.getElementById('txt-new-chat').innerText = t.newChat;
+            document.getElementById('txt-history').innerText = t.history;
+            document.getElementById('txt-settings').innerText = t.settings;
+            document.getElementById('pro-btn').innerText = isPro ? t.proActive : t.proBtn;
+            document.getElementById('txt-pro-left').innerText = t.proLeft;
+            document.getElementById('txt-reset-in').innerText = t.resetIn;
+            document.getElementById('welcome-msg').innerText = t.welcome;
+            document.getElementById('msg-input').placeholder = t.input;
+            document.getElementById('txt-modal-title').innerText = t.modalTitle;
+            document.getElementById('txt-theme-label').innerText = t.theme;
+            document.getElementById('txt-lang-label').innerText = t.lang;
+            document.getElementById('login-btn').innerText = t.login;
         }
 
-        function updateProUI() {
-            document.getElementById('pro-btn').innerHTML = isPro ? "PRO АКТИВНО ✨" : "АКТИВУВАТИ PRO";
-            document.getElementById('pro-counter').classList.toggle('hidden', !isPro);
-            document.getElementById('badge-pro').classList.toggle('hidden', !isPro);
-            document.getElementById('requests-left').innerText = proRequests;
-        }
-
-        function startCooldown() {
-            isPro = false;
-            cooldownActive = true;
-            document.getElementById('pro-btn').style.display = 'none';
-            document.getElementById('timer-display').classList.remove('hidden');
-            
-            let seconds = 24 * 60 * 60;
-            const timer = setInterval(() => {
-                seconds--;
-                let h = Math.floor(seconds / 3600);
-                let m = Math.floor((seconds % 3600) / 60);
-                let s = seconds % 60;
-                document.getElementById('countdown').innerText = 
-                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                
-                if (seconds <= 0) {
-                    clearInterval(timer);
-                    cooldownActive = false;
-                    document.getElementById('pro-btn').style.display = 'block';
-                    document.getElementById('timer-display').classList.add('hidden');
-                }
-            }, 1000);
-        }
+        // --- ЕНТЕР ТА ВІДПРАВКА ---
+        document.getElementById('msg-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
 
         async function handleSend() {
             const input = document.getElementById('msg-input');
@@ -200,7 +199,7 @@
             chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white">${val}</div></div>`);
             
             const aiId = 'ai-' + Date.now();
-            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">OrionAI думає...</div></div></div>`);
+            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">${translations[currentLang].thinking}</div></div></div>`);
             lucide.createIcons();
             input.value = "";
             chat.scrollTop = chat.scrollHeight;
@@ -212,7 +211,7 @@
                     body: JSON.stringify({
                         contents: [{
                             parts: [
-                                { text: "Ти — OrionAI, передовий штучний інтелект. Відповідай дуже розумно, чітко та українською мовою." },
+                                { text: `System: Answer in ${currentLang === 'uk' ? 'Ukrainian' : 'English'}. Be helpful.` },
                                 { text: val }
                             ]
                         }]
@@ -221,12 +220,41 @@
                 const data = await response.json();
                 document.getElementById(aiId).innerText = data.candidates[0].content.parts[0].text;
             } catch (e) {
-                document.getElementById(aiId).innerText = "Помилка підключення. Перевір API ключ.";
+                document.getElementById(aiId).innerText = "Error: Check API Key.";
             }
             chat.scrollTop = chat.scrollHeight;
         }
 
-        // --- ІНШІ ФУНКЦІЇ ---
+        // --- ПРО ТА ТАЙМЕР ---
+        function activatePro() {
+            if (cooldownActive) return;
+            isPro = true;
+            proRequests = 20;
+            document.getElementById('pro-btn').innerText = translations[currentLang].proActive;
+            document.getElementById('pro-counter').classList.remove('hidden');
+            document.getElementById('badge-pro').classList.remove('hidden');
+            document.getElementById('requests-left').innerText = proRequests;
+        }
+
+        function startCooldown() {
+            isPro = false;
+            cooldownActive = true;
+            document.getElementById('pro-btn').classList.add('hidden');
+            document.getElementById('timer-display').classList.remove('hidden');
+            let sec = 24 * 60 * 60;
+            const t = setInterval(() => {
+                sec--;
+                let h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+                document.getElementById('countdown').innerText = `${h}:${m}:${s}`;
+                if (sec <= 0) { 
+                    clearInterval(t); 
+                    cooldownActive = false; 
+                    document.getElementById('pro-btn').classList.remove('hidden');
+                }
+            }, 1000);
+        }
+
+        // --- ІНШЕ ---
         function toggleSettings() {
             const m = document.getElementById('settings-modal');
             m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
