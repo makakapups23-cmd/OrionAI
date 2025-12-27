@@ -14,14 +14,10 @@
         body { font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; overflow: hidden; }
         body.dark-theme { background-color: #0b0e14; color: #e2e8f0; }
         body.light-theme { background-color: #f8fafc; color: #1e293b; }
-        
         .glass { background: rgba(23, 27, 34, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
         .light-theme .glass { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0,0,0,0.05); }
-        
-        /* Анімація бокового меню */
         #sidebar { transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; }
         .sidebar-hidden #sidebar { transform: translateX(-100%); width: 0; padding: 0; margin: 0; overflow: hidden; border: none; }
-        
         .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; color: #94a3b8; transition: all 0.2s; cursor: pointer; }
         .sidebar-item:hover { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
         .pro-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
@@ -66,7 +62,7 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative min-w-0 transition-all duration-300">
+    <main class="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <header class="h-16 glass border-b border-white/5 flex justify-between items-center px-6 z-10">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white">
@@ -150,13 +146,18 @@
             appId: "1:683751684702:web:f51ec5465f5eb6727452cf"
         };
         firebase.initializeApp(firebaseConfig);
+        
+        // КЛЮЧ GEMINI
         const GEMINI_API_KEY = "AIzaSyCPs75glX0-r84eEv30tFE_KfdqycQgR1U";
+        
         lucide.createIcons();
 
-        // ФУНКЦІЯ ПРИХОВУВАННЯ МЕНЮ
-        function toggleSidebar() {
-            document.body.classList.toggle('sidebar-hidden');
+        function toggleSidebar() { document.body.classList.toggle('sidebar-hidden'); }
+        function toggleSettings() {
+            const m = document.getElementById('settings-modal');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
         }
+        function changeTheme(t) { document.body.className = `h-screen flex ${t}-theme`; }
 
         const translations = {
             uk: {
@@ -201,77 +202,60 @@
             }
         });
 
-       async function handleSend() {
-    const input = document.getElementById('msg-input');
-    const val = input.value.trim();
-    if (!val) return;
+        async function handleSend() {
+            const input = document.getElementById('msg-input');
+            const val = input.value.trim();
+            if (!val) return;
 
-    const chat = document.getElementById('chat-display');
-    chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white shadow-lg">${val}</div></div>`);
-    
-    const aiId = 'ai-' + Date.now();
-    chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">${translations[currentLang].thinking}</div></div></div>`);
-    
-    lucide.createIcons();
-    input.value = "";
-    chat.scrollTop = chat.scrollHeight;
-
-    try {
-        // Ми використовуємо v1beta і правильну структуру запиту
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: val }]
-                }]
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.candidates && data.candidates[0].content) {
-            // Отримуємо текст відповіді
-            const aiText = data.candidates[0].content.parts[0].text;
-            document.getElementById(aiId).innerText = aiText;
-        } else {
-            document.getElementById(aiId).innerText = "Помилка: " + (data.error ? data.error.message : "Невідома помилка");
-        }
-    } catch (e) {
-        document.getElementById(aiId).innerText = "Помилка мережі. Перевірте з'єднання.";
-        console.error(e);
-    }
-    chat.scrollTop = chat.scrollHeight;
-}
+            if (isPro) {
+                proRequests--;
+                document.getElementById('requests-left').innerText = proRequests;
+                if (proRequests <= 0) startCooldown();
+            }
 
             const chat = document.getElementById('chat-display');
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white shadow-lg">${val}</div></div>`);
+            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto mb-4"><div class="bg-purple-600 p-4 rounded-2xl text-sm max-w-[85%] text-white shadow-lg">${val}</div></div>`);
             
             const aiId = 'ai-' + Date.now();
-            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">${translations[currentLang].thinking}</div></div></div>`);
+            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start mb-4"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl text-sm shadow-xl"><div class="thinking">${translations[currentLang].thinking}</div></div></div>`);
+            
             lucide.createIcons();
             input.value = "";
             chat.scrollTop = chat.scrollHeight;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{
-                            parts: [
-                                { text: `System: Answer in ${currentLang === 'uk' ? 'Ukrainian' : 'English'}. Be helpful.` },
-                                { text: val }
-                            ]
+                            parts: [{ text: `System: Answer in ${currentLang === 'uk' ? 'Ukrainian' : 'English'}. Message: ${val}` }]
                         }]
                     })
                 });
+
                 const data = await response.json();
-                document.getElementById(aiId).innerText = data.candidates[0].content.parts[0].text;
+                
+                if (data.candidates && data.candidates[0].content) {
+                    document.getElementById(aiId).innerText = data.candidates[0].content.parts[0].text;
+                } else {
+                    document.getElementById(aiId).innerText = "Помилка: " + (data.error ? data.error.message : "Спробуйте ще раз.");
+                }
             } catch (e) {
-                document.getElementById(aiId).innerText = "Error: Check API Key.";
+                document.getElementById(aiId).innerText = "Помилка з'єднання з AI.";
             }
             chat.scrollTop = chat.scrollHeight;
+        }
+
+        function handleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).then(res => {
+                currentUser = res.user;
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('user-ui').classList.replace('hidden', 'flex');
+                document.getElementById('user-name').innerText = res.user.displayName;
+                document.getElementById('user-pic').src = res.user.photoURL;
+            }).catch(err => console.log("Login cancelled"));
         }
 
         function activatePro() {
@@ -304,23 +288,7 @@
             }, 1000);
         }
 
-        function toggleSettings() {
-            const m = document.getElementById('settings-modal');
-            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-        }
-        function changeTheme(t) { document.body.className = `h-screen flex ${t}-theme`; }
-        function handleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then(res => {
-                currentUser = res.user;
-                document.getElementById('login-btn').classList.add('hidden');
-                document.getElementById('user-ui').classList.replace('hidden', 'flex');
-                document.getElementById('user-name').innerText = res.user.displayName;
-                document.getElementById('user-pic').src = res.user.photoURL;
-            }).catch(err => console.log("Login cancelled"));
-        }
         function newChat() { document.getElementById('chat-display').innerHTML = ""; }
     </script>
 </body>
 </html>
-
