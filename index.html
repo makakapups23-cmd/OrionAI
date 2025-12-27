@@ -89,95 +89,93 @@
     </main>
 
     <script>
-        // 1. ВСТАВ СЮДИ СВІЙ КОНФІГ З FIREBASE (із налаштувань проекту)
-        const firebaseConfig = {
-  apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
-  authDomain: "orionai-92335.firebaseapp.com",
-  projectId: "orionai-92335",
-  storageBucket: "orionai-92335.firebasestorage.app",
-  messagingSenderId: "683751684702",
-  appId: "1:683751684702:web:f51ec5465f5eb6727452cf",
-  measurementId: "G-G0J8VBMEPJ"
+        // 1. Конфіг Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyAa5-4ttvYKgU-tVzUQttmUuRrEwa7NufU",
+    authDomain: "orionai-92335.firebaseapp.com",
+    projectId: "orionai-92335",
+    storageBucket: "orionai-92335.firebasestorage.app",
+    messagingSenderId: "683751684702",
+    appId: "1:683751684702:web:f51ec5465f5eb6727452cf",
+    measurementId: "G-G0J8VBMEPJ"
 };
 
-        // 2. ВСТАВ СЮДИ СВІЙ GEMINI API КЛЮЧ (який ти скопіював у Google Studio)
-        const GEMINI_API_KEY = AIzaSyAuxmNrYNt1s402hwjpIw6feAkcTjOKTkA
-        // Ініціалізація
-       // Ініціалізація Firebase без зайвих перевірок
+// 2. Твій Ключ (ТІЛЬКИ ОДИН РАЗ!)
+const GEMINI_API_KEY = "AIzaSyAuxmNrYNt1s402hwjpIw6feAkcTjOKTkA";
+
+// Ініціалізація
 firebase.initializeApp(firebaseConfig);
 lucide.createIcons();
 
-        // Функція входу Google
-        async function handleLogin() {
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                const result = await firebase.auth().signInWithPopup(provider);
-                const user = result.user;
-                document.getElementById('login-btn').classList.add('hidden');
-                document.getElementById('user-ui').classList.remove('hidden');
-                document.getElementById('user-ui').classList.add('flex');
-                document.getElementById('user-name').innerText = user.displayName;
-                document.getElementById('user-pic').src = user.photoURL;
-            } catch (error) {
-                alert("Помилка входу. Спробуй запустити сайт через Vercel або Live Server.");
-                console.error(error);
-            }
-        }
+// Функція входу
+async function handleLogin() {
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+        document.getElementById('login-btn').classList.add('hidden');
+        document.getElementById('user-ui').classList.remove('hidden');
+        document.getElementById('user-ui').classList.add('flex');
+        document.getElementById('user-name').innerText = user.displayName;
+        document.getElementById('user-pic').src = user.photoURL;
+    } catch (error) {
+        console.error("Повна помилка:", error);
+        alert("Помилка входу. Додай домен у Firebase Console!");
+    }
+}
 
-        // Функція відправки повідомлення до справжнього ШІ
-        async function handleSend() {
-            const input = document.getElementById('msg-input');
-            const chat = document.getElementById('chat-display');
-            const val = input.value.trim();
-            if (!val) return;
+// Функція відправки
+async function handleSend() {
+    const input = document.getElementById('msg-input');
+    const chat = document.getElementById('chat-display');
+    const val = input.value.trim();
+    if (!val) return;
 
-            // Додаємо твоє повідомлення
-            chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl rounded-tr-none shadow-lg text-sm max-w-[85%]">${val}</div></div>`);
-            input.value = "";
-            chat.scrollTop = chat.scrollHeight;
+    chat.insertAdjacentHTML('beforeend', `<div class="flex justify-end max-w-3xl mx-auto"><div class="bg-purple-600 p-4 rounded-2xl rounded-tr-none shadow-lg text-sm max-w-[85%]">${val}</div></div>`);
+    input.value = "";
+    chat.scrollTop = chat.scrollHeight;
 
-            // Блок очікування ШІ
-            const aiId = 'ai-' + Date.now();
-            chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl rounded-tl-none text-sm text-gray-300 shadow-xl"><div class="thinking">OrionAI міркує...</div></div></div>`);
-            lucide.createIcons();
-            chat.scrollTop = chat.scrollHeight;
+    const aiId = 'ai-' + Date.now();
+    chat.insertAdjacentHTML('beforeend', `<div class="max-w-3xl mx-auto flex gap-4 items-start"><div class="w-10 h-10 rounded-xl pro-gradient flex items-center justify-center shadow-xl"><i data-lucide="bot" class="w-6 h-6 text-white"></i></div><div id="${aiId}" class="glass p-5 rounded-2xl rounded-tl-none text-sm text-gray-300 shadow-xl"><div class="thinking">OrionAI міркує...</div></div></div>`);
+    lucide.createIcons();
+    chat.scrollTop = chat.scrollHeight;
 
-            try {
-                // Запит до Google Gemini API
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
-                });
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
+        });
 
-                const data = await response.json();
-                const aiResponse = data.candidates[0].content.parts[0].text;
-
-                // Виводимо відповідь ШІ
-                document.getElementById(aiId).innerText = aiResponse;
-            } catch (error) {
-                document.getElementById(aiId).innerText = "Помилка: не вдалося отримати відповідь. Перевір API ключ або інтернет.";
-            }
-            chat.scrollTop = chat.scrollHeight;
-            updateHistory(val);
-        }
-
-        function updateHistory(text) {
-            const hist = document.getElementById('chat-history');
-            const item = `<div class="sidebar-item truncate"><i data-lucide="message-square" class="w-4 h-4 text-purple-500"></i> ${text}</div>`;
-            hist.insertAdjacentHTML('afterbegin', item);
-            lucide.createIcons();
-        }
-
-        function newChat() { document.getElementById('chat-display').innerHTML = ""; }
+        const data = await response.json();
         
-        function togglePro() { 
-            document.getElementById('status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span> PRO MODE ACTIVE`;
-            document.getElementById('pro-btn').innerText = "PRO ВЛАСНИК";
+        if (data.error) {
+            throw new Error(data.error.message);
         }
 
-        document.getElementById('msg-input').addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
+        const aiResponse = data.candidates[0].content.parts[0].text;
+        document.getElementById(aiId).innerText = aiResponse;
+    } catch (error) {
+        console.error("API Error:", error);
+        document.getElementById(aiId).innerText = "Помилка API: " + error.message;
+    }
+    chat.scrollTop = chat.scrollHeight;
+    updateHistory(val);
+}
+
+// Решта функцій (History, NewChat, Pro) залишаються без змін...
+function updateHistory(text) {
+    const hist = document.getElementById('chat-history');
+    const item = `<div class="sidebar-item truncate"><i data-lucide="message-square" class="w-4 h-4 text-purple-500"></i> ${text}</div>`;
+    hist.insertAdjacentHTML('afterbegin', item);
+    lucide.createIcons();
+}
+function newChat() { document.getElementById('chat-display').innerHTML = ""; }
+function togglePro() { 
+    document.getElementById('status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span> PRO MODE ACTIVE`;
+    document.getElementById('pro-btn').innerText = "PRO ВЛАСНИК";
+}
+document.getElementById('msg-input').addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
     </script>
 </body>
-
 </html>
